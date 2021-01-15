@@ -36,6 +36,9 @@ import algebra.curves.barreto_naehrig.bn254b.BN254bG2;
 import algebra.curves.barreto_naehrig.bn254b.BN254bPairing;
 import algebra.curves.barreto_naehrig.bn254b.bn254b_parameters.BN254bG1Parameters;
 import algebra.curves.barreto_naehrig.bn254b.bn254b_parameters.BN254bG2Parameters;
+import algebra.fields.AbstractFieldElementExpanded;
+import algebra.groups.AbstractCurveGroupParameters;
+import algebra.groups.AbstractCyclicGroupParameters;
 // import algebra.curves.fake.*;
 // import algebra.curves.fake.fake_parameters.FakeFqParameters;
 // import algebra.curves.fake.fake_parameters.FakeG1Parameters;
@@ -183,19 +186,17 @@ public class SerialzkSNARKTest implements Serializable {
 
   // TODO: Add test for BLS
   private <
-  BLSFrT extends BLSFields.BLSFr<BLSFrT>,
-  BLSFqT extends BLSFields.BLSFq<BLSFqT>,
-  BLSFq2T extends BLSFields.BLSFq2<BLSFqT, BLSFq2T>,
-  BLSFq6T extends BLSFields.BLSFq6<BLSFqT, BLSFq2T, BLSFq6T>,
-  BLSFq12T extends BLSFields.BLSFq12<BLSFqT, BLSFq2T, BLSFq6T, BLSFq12T>,
-  BLSG1T extends BLSG1<BLSFrT, BLSFqT, BLSG1T, BLSG1ParametersT>,
-  BLSG2T extends BLSG2<BLSFrT, BLSFqT, BLSFq2T, BLSG2T, BLSG2ParametersT>,
-  BLSGTT extends BLSGT<BLSFqT, BLSFq2T, BLSFq6T, BLSFq12T, BLSGTT, BLSGTParametersT>,
-  BLSG1ParametersT extends AbstractBLSG1Parameters<BLSFrT, BLSFqT, BLSG1T, BLSG1ParametersT>,
-  BLSG2ParametersT extends
-      AbstractBLSG2Parameters<BLSFrT, BLSFqT, BLSFq2T, BLSG2T, BLSG2ParametersT>,
-  BLSGTParametersT extends
-      AbstractBLSGTParameters<BLSFqT, BLSFq2T, BLSFq6T, BLSFq12T, BLSGTT, BLSGTParametersT>,
+  CurveFrT extends AbstractFieldElementExpanded<CurveFrT>,
+  CurveFqT extends AbstractFieldElementExpanded<CurveFqT>,
+  CurveFq2T extends AbstractFieldElementExpanded<CurveFq2T>,
+  CurveFq6T extends AbstractFieldElementExpanded<CurveFq6T>,
+  CurveFq12T extends AbstractFieldElementExpanded<CurveFq12T>,
+  CurveG1T extends AbstractG1<CurveFrT, CurveFqT, CurveG1T, CurveG1ParametersT>,
+  CurveG2T extends AbstractG1<CurveFrT, CurveFqT, CurveFq2T, CurveG2T, CurveG2ParametersT>,
+  CurveGTT extends AbstractG1<CurveFqT, CurveFq2T, CurveFq6T, CurveFq12T, CurveGTT, CurveGTParametersT>,
+  CurveG1ParametersT extends AbstractCurveGroupParameters<CurveFrT, CurveFqT, CurveG1T, CurveG1ParametersT>,
+  CurveG2ParametersT extends AbstractCurveGroupParameters<CurveFrT, CurveFqT, CurveFq2T, CurveG2T, CurveG2ParametersT>,
+  CurveGTParametersT extends AbstractCyclicGroupParameters<CurveFqT, CurveFq2T, CurveFq6T, CurveFq12T, CurveGTT, CurveGTParametersT>,
   BLSPublicParametersT extends BLSPublicParameters<BLSFqT, BLSFq2T, BLSFq6T, BLSFq12T>,
   BLSPairingT extends
       BLSPairing<
