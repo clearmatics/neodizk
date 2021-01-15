@@ -14,13 +14,18 @@ import algebra.curves.barreto_naehrig.BNFields.*;
 import algebra.curves.barreto_naehrig.abstract_bn_parameters.AbstractBNG1Parameters;
 import algebra.curves.barreto_naehrig.abstract_bn_parameters.AbstractBNG2Parameters;
 import algebra.curves.barreto_naehrig.abstract_bn_parameters.AbstractBNGTParameters;
+import algebra.curves.barreto_naehrig.bn254a.BN254aG1;
+import algebra.curves.barreto_naehrig.bn254a.BN254aG2;
+import algebra.curves.barreto_naehrig.bn254a.BN254aPairing;
+import algebra.curves.barreto_naehrig.bn254a.BN254aFields.BN254aFr;
+import algebra.curves.barreto_naehrig.bn254a.bn254a_parameters.BN254aG1Parameters;
+import algebra.curves.barreto_naehrig.bn254a.bn254a_parameters.BN254aG2Parameters;
 import algebra.curves.barreto_naehrig.bn254b.BN254bFields.BN254bFr;
 import algebra.curves.barreto_naehrig.bn254b.BN254bG1;
 import algebra.curves.barreto_naehrig.bn254b.BN254bG2;
 import algebra.curves.barreto_naehrig.bn254b.BN254bPairing;
 import algebra.curves.barreto_naehrig.bn254b.bn254b_parameters.BN254bG1Parameters;
 import algebra.curves.barreto_naehrig.bn254b.bn254b_parameters.BN254bG2Parameters;
-import algebra.curves.fake.*;
 import configuration.Configuration;
 import java.io.Serializable;
 import org.apache.spark.SparkConf;
@@ -117,37 +122,7 @@ public class DistributedzkSNARKTest implements Serializable {
   }
 
   // TODO:
-  // Remove this comment when: https://github.com/clearmatics/dizk/issues/1
-  // is fixed.
-  /*
-  @Test
-  public void DistributedFakeProofSystemTest() {
-      final int numInputs = 1023;
-      final int numConstraints = 1024;
-
-      FakeInitialize.init();
-      final Fp fieldFactory = new FakeFqParameters().ONE();
-      final FakeG1 fakeG1Factory = new FakeG1Parameters().ONE();
-      final FakeG2 fakeG2Factory = new FakeG2Parameters().ONE();
-      final FakePairing fakePairing = new FakePairing();
-
-      final Tuple3<R1CSRelationRDD<Fp>, Assignment<Fp>, JavaPairRDD<Long, Fp>> construction =
-              R1CSConstruction.parallelConstruct(numConstraints, numInputs, fieldFactory, config);
-      final R1CSRelationRDD<Fp> r1cs = construction._1();
-      final Assignment<Fp> primary = construction._2();
-      final JavaPairRDD<Long, Fp> fullAssignment = construction._3();
-
-      final CRS<Fp, FakeG1, FakeG2, FakeGT> CRS = DistributedSetup.generate(r1cs, fieldFactory,
-              fakeG1Factory, fakeG2Factory, fakePairing, config);
-      final Proof<FakeG1, FakeG2> proof = DistributedProver.prove(CRS.provingKeyRDD(), primary,
-              fullAssignment, fieldFactory, config);
-      final boolean isValid = Verifier.verify(CRS.verificationKey(), primary, proof,
-              fakePairing, config);
-
-      System.out.println(isValid);
-      assertTrue(isValid);
-  }
-
+  // Fix these tests. See: https://github.com/clearmatics/dizk/issues/1
   @Test
   public void DistributedBN254aProofSystemTest() {
       final int numInputs = 1023;
@@ -159,7 +134,6 @@ public class DistributedzkSNARKTest implements Serializable {
 
       DistributedBNProofSystemTest(numInputs, numConstraints, fieldFactory, g1Factory, g2Factory, pairing);
   }
-  */
 
   @Test
   public void DistributedBN254bProofSystemTest() {
