@@ -1,7 +1,6 @@
 package io;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import algebra.curves.AbstractG1;
 import algebra.curves.AbstractG2;
@@ -14,12 +13,61 @@ import algebra.curves.barreto_naehrig.bn254a.BN254aFields.BN254aFr;
 import algebra.curves.barreto_naehrig.bn254a.BN254aG1;
 import algebra.curves.barreto_naehrig.bn254a.BN254aG2;
 import algebra.fields.AbstractFieldElementExpanded;
+import common.Utils;
 import java.io.IOException;
+import java.util.ArrayList;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import profiler.utils.SparkUtils;
 import relations.objects.Assignment;
 import scala.Tuple2;
 
 public class AssignmentReaderTest extends TestWithData {
+
+  static JavaSparkContext sc = null;
+
+  @BeforeAll
+  public static void setUp() throws Exception {
+    final SparkConf conf = new SparkConf().setMaster("local").setAppName("assignmentReaderTest");
+    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+    conf.registerKryoClasses(SparkUtils.zksparkClasses());
+    sc = new JavaSparkContext(conf);
+  }
+
+  @AfterAll
+  public static void tearDown() throws Exception {
+    sc.close();
+    sc = null;
+  }
+
+  protected <FrT extends AbstractFieldElementExpanded<FrT>>
+      Tuple2<Assignment<FrT>, Assignment<FrT>> expectPrimaryAuxiliary(FrT one) {
+    // Test data has the form [15, -15, 16, -16, 17, -17].
+    var prim =
+        new Assignment<FrT>(
+            new ArrayList<FrT>() {
+              {
+                add(one);
+                add(one.construct(15));
+              }
+            });
+    var aux =
+        new Assignment<FrT>(
+            new ArrayList<FrT>() {
+              {
+                add(one.construct(-15));
+                add(one.construct(16));
+                add(one.construct(-16));
+                add(one.construct(17));
+                add(one.construct(-17));
+              }
+            });
+    return new Tuple2<Assignment<FrT>, Assignment<FrT>>(prim, aux);
+  }
 
   protected <
           FrT extends AbstractFieldElementExpanded<FrT>,
@@ -28,24 +76,17 @@ public class AssignmentReaderTest extends TestWithData {
       void testReaderAgainstData(FrT one, AssignmentReader<FrT, G1T, G2T> assignmentReader)
           throws IOException {
 
-    // Test data has the form [15, -15, 16, -16, 17, -17].
+    final Tuple2<Assignment<FrT>, Assignment<FrT>> expectPrimAux = expectPrimaryAuxiliary(one);
+    final Assignment<FrT> expectPrimary = expectPrimAux._1;
+    final Assignment<FrT> expectAuxiliary = expectPrimAux._2;
 
     final Tuple2<Assignment<FrT>, Assignment<FrT>> primAux =
-        assignmentReader.readPrimaryAuxiliary(1);
+        assignmentReader.readPrimaryAuxiliary(1, one);
     final Assignment<FrT> primary = primAux._1;
     final Assignment<FrT> auxiliary = primAux._2;
 
-    // Check primary input values
-    assertEquals(1, primary.size());
-    assertEquals(one.construct(15), primary.get(0));
-
-    // Check auxiliary input values
-    assertEquals(5, auxiliary.size());
-    assertEquals(one.construct(-15), auxiliary.get(0));
-    assertEquals(one.construct(16), auxiliary.get(1));
-    assertEquals(one.construct(-16), auxiliary.get(2));
-    assertEquals(one.construct(17), auxiliary.get(3));
-    assertEquals(one.construct(-17), auxiliary.get(4));
+    assertEquals(expectPrimary, primary);
+    assertEquals(expectAuxiliary, auxiliary);
   }
 
   protected <
@@ -53,8 +94,39 @@ public class AssignmentReaderTest extends TestWithData {
           G1T extends AbstractG1<G1T>,
           G2T extends AbstractG2<G2T>>
       void testReaderAgainstDataRDD(
-          final FrT one, final AssignmentReader<FrT, G1T, G2T> assignmentReader) {
-    assertTrue(true, "unimplemented");
+          final FrT one,
+          final AssignmentReader<FrT, G1T, G2T> assignmentReader,
+          final int numPartitions,
+          final int batchSize)
+          throws IOException {
+
+    final Tuple2<Assignment<FrT>, Assignment<FrT>> expectPrimAux = expectPrimaryAuxiliary(one);
+    final Assignment<FrT> expectPrimary = expectPrimAux._1;
+    final Assignment<FrT> expectAuxiliary = expectPrimAux._2;
+    final ArrayList<FrT> expectFullArray = new ArrayList<FrT>(expectPrimary.elements());
+    expectFullArray.addAll(expectAuxiliary.elements());
+    final Assignment<FrT> expectFull = new Assignment<FrT>(expectFullArray);
+
+    // Read the distributed version of the assignment.
+    final Tuple2<Assignment<FrT>, JavaPairRDD<Long, FrT>> primFull =
+        assignmentReader.readPrimaryAuxiliaryRDD(1, one, sc, numPartitions, batchSize);
+    final Assignment<FrT> primary = primFull._1;
+    final JavaPairRDD<Long, FrT> full = primFull._2;
+
+    // Convert auxiliary to an Assignment object, and compare to the expected
+    // data.
+    final ArrayList<Tuple2<Long, FrT>> fullA = new ArrayList<Tuple2<Long, FrT>>(full.collect());
+    final Assignment<FrT> fullLocal =
+        new Assignment<FrT>(Utils.convertFromPairs(fullA, fullA.size()));
+
+    System.out.println(" expectPrimary: " + String.valueOf(expectPrimary.elements()));
+    System.out.println(" primary: " + String.valueOf(primary.elements()));
+    System.out.println(" expectFull: " + String.valueOf(expectFull.elements()));
+    System.out.println(" fullA: " + String.valueOf(fullA));
+    System.out.println(" fullLocal: " + String.valueOf(fullLocal.elements()));
+
+    assertEquals(expectPrimary, primary);
+    assertEquals(expectFull, fullLocal);
   }
 
   @Test
@@ -73,13 +145,66 @@ public class AssignmentReaderTest extends TestWithData {
         BLS12_377Fr.ONE, new AssignmentReader<BLS12_377Fr, BLS12_377G1, BLS12_377G2>(binReader));
   }
 
-  // @Test
-  // public void BN254aBinaryAssignmentReaderRDDTest() throws IOException {
-  //   final InputStream in = openTestFile("ec_test_data_alt-bn128.bin");
-  //   final BN254aBinaryReader binReader = new BN254aBinaryReader(in);
+  @Test
+  public void testAssignmentReaderRDDBN254a_8_8() throws IOException {
+    final var in = openTestFile("assignment_alt-bn128.bin");
+    final var binReader = new BN254aBinaryReader(in);
 
-  //   testReaderAgainstDataRDD(
-  //       BN254aFr.ONE,
-  //       new BinaryAssignmentReader<BN254aFr, BN254aG1, BN254aG2>(binReader));
-  // }
+    testReaderAgainstDataRDD(
+        BN254aFr.ONE, new AssignmentReader<BN254aFr, BN254aG1, BN254aG2>(binReader), 8, 8);
+  }
+
+  @Test
+  public void testAssignmentReaderRDDBN254a_2_2() throws IOException {
+    final var in = openTestFile("assignment_alt-bn128.bin");
+    final var binReader = new BN254aBinaryReader(in);
+
+    testReaderAgainstDataRDD(
+        BN254aFr.ONE, new AssignmentReader<BN254aFr, BN254aG1, BN254aG2>(binReader), 2, 2);
+  }
+
+  @Test
+  public void testAssignmentReaderRDDBN254a_2_4() throws IOException {
+    final var in = openTestFile("assignment_alt-bn128.bin");
+    final var binReader = new BN254aBinaryReader(in);
+
+    testReaderAgainstDataRDD(
+        BN254aFr.ONE, new AssignmentReader<BN254aFr, BN254aG1, BN254aG2>(binReader), 2, 4);
+  }
+
+  @Test
+  public void testAssignmentReaderRDDBLS12_377_8_8() throws IOException {
+    final var in = openTestFile("assignment_bls12-377.bin");
+    final var binReader = new BLS12_377BinaryReader(in);
+
+    testReaderAgainstDataRDD(
+        BLS12_377Fr.ONE,
+        new AssignmentReader<BLS12_377Fr, BLS12_377G1, BLS12_377G2>(binReader),
+        8,
+        8);
+  }
+
+  @Test
+  public void testAssignmentReaderRDDBLS12_377_2_2() throws IOException {
+    final var in = openTestFile("assignment_bls12-377.bin");
+    final var binReader = new BLS12_377BinaryReader(in);
+
+    testReaderAgainstDataRDD(
+        BLS12_377Fr.ONE,
+        new AssignmentReader<BLS12_377Fr, BLS12_377G1, BLS12_377G2>(binReader),
+        2,
+        2);
+  }
+
+  @Test
+  public void testAssignmentReaderRDDBLS12_377_2_4() throws IOException {
+    final var in = openTestFile("assignment_bls12-377.bin");
+    final var binReader = new BLS12_377BinaryReader(in);
+
+    testReaderAgainstDataRDD(
+        BLS12_377Fr.ONE,
+        new AssignmentReader<BLS12_377Fr, BLS12_377G1, BLS12_377G2>(binReader),
+        2,
+        4);
+  }
 }
