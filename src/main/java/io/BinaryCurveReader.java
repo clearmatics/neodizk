@@ -106,6 +106,37 @@ public abstract class BinaryCurveReader<
     return elements;
   }
 
+  public <T> void extendArrayListN(
+      final ArrayList<T> elements, final Supplier<T> reader, final int numElements)
+      throws IOException {
+    elements.ensureCapacity(elements.size() + numElements);
+    for (long i = 0; i < numElements; ++i) {
+      // Work-around for exceptions in Suppliers.  See readArrayListN.
+      T value = reader.get();
+      if (value == null) {
+        throw new IOException("failed to read element");
+      }
+      elements.add(value);
+    }
+  }
+
+  public <T> void extendArrayListWithIndicesN(
+      final ArrayList<Tuple2<Long, T>> elements,
+      final Supplier<T> reader,
+      final int numElements,
+      long startIdx)
+      throws IOException {
+    elements.ensureCapacity(elements.size() + numElements);
+    for (long i = 0; i < numElements; ++i) {
+      // Work-around for exceptions in Suppliers.  See readArrayListN.
+      T value = reader.get();
+      if (value == null) {
+        throw new IOException("failed to read element");
+      }
+      elements.add(new Tuple2<Long, T>(startIdx++, value));
+    }
+  }
+
   public <T> ArrayList<T> readArrayListNoThrow(Supplier<T> reader) {
     try {
       return readArrayList(reader);
