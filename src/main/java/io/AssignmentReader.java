@@ -3,14 +3,13 @@ package io;
 import algebra.curves.AbstractG1;
 import algebra.curves.AbstractG2;
 import algebra.fields.AbstractFieldElementExpanded;
-import common.Utils;
+import common.PairRDDAggregator;
 import java.io.IOException;
 import java.util.ArrayList;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import relations.objects.Assignment;
 import scala.Tuple2;
-import scala.collection.JavaConverters;
 
 /** Read assignment objects given for Assignment objects. */
 public class AssignmentReader<
@@ -55,55 +54,26 @@ public class AssignmentReader<
       final int numPartitions,
       final int batchSize)
       throws IOException {
-    // Expect that a full batch is a multiple of numPartitions.
-    assert batchSize % numPartitions == 0;
-
     final long numEntries = reader.readLongLE();
-
-    // numBatches = ceil((numEntries + 1) / batchSize)
-    //            = (numEntries + 1 + (batchSize - 1)) `div` batchSize
-    //            = (numEntries + batchSize) `div` batchSize
-    final int numBatches = Math.toIntExact((numEntries + batchSize) / batchSize);
-
-    // Some short-cuts below assume that the primary inputs do not exceed the
-    // batch size.
-    assert (primaryInputSize + 1) <= batchSize;
 
     // Load primary inputs.
     final var primary = new Assignment<FieldT>(readPrimaryInput(primaryInputSize, one));
 
-    // Convert to an array (to be used to hold batches), and extend to create a
-    // full batch. Subsequent batches will be added to this.
-    ArrayList<Tuple2<Long, FieldT>> batch = Utils.convertToPairs(primary.elements());
-    long entryIdx = batch.size();
+    // RDD aggregator for the full assignment. Insert all primary input values.
+    var rddAggregator = new PairRDDAggregator<Long, FieldT>(sc, numPartitions, batchSize);
 
-    reader.extendArrayListWithIndicesN(
-        batch,
-        () -> reader.readFrNoThrow(),
-        Math.toIntExact(Math.min(numEntries + 1 - entryIdx, batchSize - batch.size())),
-        entryIdx);
-
-    final var batches = new ArrayList<JavaPairRDD<Long, FieldT>>(numBatches);
-    batches.add(sc.parallelizePairs(batch, numPartitions));
-    entryIdx = batch.size();
-
-    // `<=` here, due to the extra FieldT.one added at index 0
-    while (entryIdx <= numEntries) {
-      final int entriesToRead = Math.toIntExact(Math.min(numEntries + 1 - entryIdx, batchSize));
-
-      // Note that the existing array cannot be re-used, since
-      // sc.parallelizePairs seems to retain a reference to it, and read the
-      // data asynchroously.
-      batch = new ArrayList<Tuple2<Long, FieldT>>(entriesToRead);
-      reader.extendArrayListWithIndicesN(
-          batch, () -> reader.readFrNoThrow(), entriesToRead, entryIdx);
-
-      batches.add(sc.parallelizePairs(batch, numPartitions));
-      entryIdx += entriesToRead;
+    long idx = 0;
+    for (var f : primary.elements()) {
+      rddAggregator.add(idx++, f);
     }
 
-    JavaPairRDD<Long, FieldT> fullAssignment =
-        sc.union(JavaConverters.asScalaIteratorConverter(batches.iterator()).asScala().toSeq());
+    // Add all remaining values.  +1 to account for the extra ONE added to the
+    // primary inputs.
+    for (; idx < numEntries + 1; ++idx) {
+      rddAggregator.add(idx, reader.readFr());
+    }
+
+    var fullAssignment = rddAggregator.aggregate();
     return new Tuple2<Assignment<FieldT>, JavaPairRDD<Long, FieldT>>(primary, fullAssignment);
   }
 
