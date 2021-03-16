@@ -10,6 +10,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import relations.objects.Assignment;
 import scala.Tuple2;
+import scala.collection.JavaConverters;
 
 /** Read assignment objects given for Assignment objects. */
 public class AssignmentReader<
@@ -81,7 +82,9 @@ public class AssignmentReader<
         () -> reader.readFrNoThrow(),
         Math.toIntExact(Math.min(numEntries + 1 - entryIdx, batchSize - batch.size())),
         entryIdx);
-    JavaPairRDD<Long, FieldT> fullAssignment = sc.parallelizePairs(batch, numPartitions);
+
+    final var batches = new ArrayList<JavaPairRDD<Long, FieldT>>(numBatches);
+    batches.add(sc.parallelizePairs(batch, numPartitions));
     entryIdx = batch.size();
 
     // `<=` here, due to the extra FieldT.one added at index 0
@@ -95,11 +98,12 @@ public class AssignmentReader<
       reader.extendArrayListWithIndicesN(
           batch, () -> reader.readFrNoThrow(), entriesToRead, entryIdx);
 
-      fullAssignment = fullAssignment.union(sc.parallelizePairs(batch, numPartitions));
-
+      batches.add(sc.parallelizePairs(batch, numPartitions));
       entryIdx += entriesToRead;
     }
 
+    JavaPairRDD<Long, FieldT> fullAssignment =
+        sc.union(JavaConverters.asScalaIteratorConverter(batches.iterator()).asScala().toSeq());
     return new Tuple2<Assignment<FieldT>, JavaPairRDD<Long, FieldT>>(primary, fullAssignment);
   }
 
