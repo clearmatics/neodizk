@@ -13,36 +13,16 @@ import algebra.curves.barreto_naehrig.bn254a.BN254aFields.BN254aFr;
 import algebra.curves.barreto_naehrig.bn254a.BN254aG1;
 import algebra.curves.barreto_naehrig.bn254a.BN254aG2;
 import algebra.fields.AbstractFieldElementExpanded;
+import common.TestWithSparkContext;
 import common.Utils;
 import java.io.IOException;
 import java.util.ArrayList;
-import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import profiler.utils.SparkUtils;
 import relations.objects.Assignment;
 import scala.Tuple2;
 
-public class AssignmentReaderTest extends TestWithData {
-
-  static JavaSparkContext sc = null;
-
-  @BeforeAll
-  public static void setUp() throws Exception {
-    final SparkConf conf = new SparkConf().setMaster("local").setAppName("assignmentReaderTest");
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
-    conf.registerKryoClasses(SparkUtils.zksparkClasses());
-    sc = new JavaSparkContext(conf);
-  }
-
-  @AfterAll
-  public static void tearDown() throws Exception {
-    sc.close();
-    sc = null;
-  }
+public class AssignmentReaderTest extends TestWithSparkContext {
 
   protected <FrT extends AbstractFieldElementExpanded<FrT>>
       Tuple2<Assignment<FrT>, Assignment<FrT>> expectPrimaryAuxiliary(FrT one) {
@@ -109,7 +89,8 @@ public class AssignmentReaderTest extends TestWithData {
 
     // Read the distributed version of the assignment.
     final Tuple2<Assignment<FrT>, JavaPairRDD<Long, FrT>> primFull =
-        assignmentReader.readPrimaryAuxiliaryRDD(1, one, sc, numPartitions, batchSize);
+        assignmentReader.readPrimaryAuxiliaryRDD(
+            1, one, getSparkContext(), numPartitions, batchSize);
     final Assignment<FrT> primary = primFull._1;
     final JavaPairRDD<Long, FrT> full = primFull._2;
 
