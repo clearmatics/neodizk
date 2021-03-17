@@ -28,17 +28,12 @@ import zk_proof_systems.zkSNARK.grothBGM17.objects.VerificationKey;
 
 /** Test readers for grothBGM17-specific objects. */
 public class ZKSnarkObjectReaderTest extends TestWithData {
-  public <
+  protected static <
           FrT extends AbstractFieldElementExpanded<FrT>,
           G1T extends AbstractG1<G1T>,
           G2T extends AbstractG2<G2T>>
-      void testReaderAgainstProvingKeyData(
-          final ZKSnarkObjectReader<FrT, G1T, G2T> zkSnarkObjectReader,
-          final FrT oneFr,
-          final G1T oneG1,
-          final G2T oneG2)
-          throws IOException {
-
+      ProvingKey<FrT, G1T, G2T> expectProvingKey(
+          final FrT oneFr, final G1T oneG1, final G2T oneG2) {
     // See zeth project file
     // libzeth/tests/snarks/groth16/groth16_snark_test.cpp, which constructs the
     // test data.
@@ -86,22 +81,33 @@ public class ZKSnarkObjectReaderTest extends TestWithData {
     assertEquals(3, expectQueryL.size());
     System.out.println("expectQueryL: " + String.valueOf(expectQueryL));
 
-    final var expectProvingKey =
-        new ProvingKey<FrT, G1T, G2T>(
-            oneG1,
-            oneG1.negate(),
-            oneG2.negate(),
-            oneG1.mul(oneFr.construct(-2)),
-            oneG2.mul(oneFr.construct(-2)),
-            expectQueryL,
-            expectQueryA,
-            expectQueryB,
-            expectQueryH,
-            r1cs);
+    return new ProvingKey<FrT, G1T, G2T>(
+        oneG1,
+        oneG1.negate(),
+        oneG2.negate(),
+        oneG1.mul(oneFr.construct(-2)),
+        oneG2.mul(oneFr.construct(-2)),
+        expectQueryL,
+        expectQueryA,
+        expectQueryB,
+        expectQueryH,
+        r1cs);
+  }
 
+  public <
+          FrT extends AbstractFieldElementExpanded<FrT>,
+          G1T extends AbstractG1<G1T>,
+          G2T extends AbstractG2<G2T>>
+      void testReaderAgainstProvingKeyData(
+          final ZKSnarkObjectReader<FrT, G1T, G2T> zkSnarkObjectReader,
+          final FrT oneFr,
+          final G1T oneG1,
+          final G2T oneG2)
+          throws IOException {
     // Read proving key and compare to expected.
-    final var provingKey = zkSnarkObjectReader.readProvingKey();
-    assertEquals(expectProvingKey, provingKey);
+    final var expectPK = expectProvingKey(oneFr, oneG1, oneG2);
+    final var pk = zkSnarkObjectReader.readProvingKey();
+    assertEquals(expectPK, pk);
   }
 
   public <
