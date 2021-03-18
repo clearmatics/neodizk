@@ -4,12 +4,15 @@ import algebra.curves.AbstractG1;
 import algebra.curves.AbstractG2;
 import algebra.fields.AbstractFieldElement;
 import algebra.fields.AbstractFieldElementExpanded;
+import common.PairRDDAggregator;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.function.Supplier;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 
 /**
@@ -83,7 +86,7 @@ public abstract class BinaryCurveReader<
 
   public <T1, T2> Tuple2<T1, T2> readTuple2(
       final Supplier<T1> reader1, final Supplier<T2> reader2) {
-    return new Tuple2(reader1.get(), reader2.get());
+    return new Tuple2<T1, T2>(reader1.get(), reader2.get());
   }
 
   public <T> ArrayList<T> readArrayList(final Supplier<T> reader) throws IOException {
@@ -137,7 +140,7 @@ public abstract class BinaryCurveReader<
     }
   }
 
-  public <T> ArrayList<T> readArrayListNoThrow(Supplier<T> reader) {
+  public <T> ArrayList<T> readArrayListNoThrow(final Supplier<T> reader) {
     try {
       return readArrayList(reader);
     } catch (IOException e) {
@@ -146,7 +149,7 @@ public abstract class BinaryCurveReader<
   }
 
   /** Read a sparse vector into an ArrayList, where missing values are `null`. */
-  public <T> ArrayList<T> readSparseVectorAsArrayList(Supplier<T> reader) throws IOException {
+  public <T> ArrayList<T> readSparseVectorAsArrayList(final Supplier<T> reader) throws IOException {
     return readSparseVectorAsArrayList(reader, 0);
   }
 
@@ -156,7 +159,7 @@ public abstract class BinaryCurveReader<
    * the resulting ArrayList), and offset 8 will place entry with index 0 in the sparse vector at
    * index 8 in the resulting ArrayList.
    */
-  public <T> ArrayList<T> readSparseVectorAsArrayList(Supplier<T> reader, int offset)
+  public <T> ArrayList<T> readSparseVectorAsArrayList(final Supplier<T> reader, final int offset)
       throws IOException {
     assert (offset >= 0);
     readLongLE(); // skip unused domain_size
@@ -181,7 +184,8 @@ public abstract class BinaryCurveReader<
     return entries;
   }
 
-  public <T> ArrayList<T> readAccumulationVectorAsArrayList(Supplier<T> reader) throws IOException {
+  public <T> ArrayList<T> readAccumulationVectorAsArrayList(final Supplier<T> reader)
+      throws IOException {
     // An accumulation_vector is a `first` element, followed by a sparse vector.
     final T first = reader.get();
     ArrayList<T> elements = readSparseVectorAsArrayList(reader, 1);
@@ -192,8 +196,42 @@ public abstract class BinaryCurveReader<
     return elements;
   }
 
-  protected static <FieldT extends AbstractFieldElement<FieldT>> int computeSizeBytes(FieldT one) {
-    FieldT minusOne = one.zero().sub(one);
+  /**
+   * Read a vector of values into a JavaPairRDD<Long, T>, where indices are generated automatically.
+   */
+  public <T> JavaPairRDD<Long, T> readVectorAsPairRDD(
+      final Supplier<T> reader,
+      final long offset,
+      final JavaSparkContext sc,
+      final int numPartitions,
+      final int batchSize)
+      throws IOException {
+    final long numEntries = readLongLE();
+    final var aggregator = new PairRDDAggregator<Long, T>(sc, numPartitions, batchSize);
+    for (long i = 0; i < numEntries; ++i) {
+      aggregator.add(i, reader.get());
+    }
+    return aggregator.aggregate();
+  }
+
+  public <T> JavaPairRDD<Long, T> readSparseVectorAsPairRDD(
+      final Supplier<T> reader,
+      final JavaSparkContext sc,
+      final int numPartitions,
+      final int batchSize)
+      throws IOException {
+    readLongLE(); // skip unused domain_size
+    final long numEntries = readLongLE();
+    final var aggregator = new PairRDDAggregator<Long, T>(sc, numPartitions, batchSize);
+    for (long i = 0; i < numEntries; ++i) {
+      aggregator.add(readLongLE(), reader.get());
+    }
+    return aggregator.aggregate();
+  }
+
+  protected static <FieldT extends AbstractFieldElement<FieldT>> int computeSizeBytes(
+      final FieldT one) {
+    final FieldT minusOne = one.zero().sub(one);
     final int sizeBits = minusOne.bitSize();
     return (sizeBits + 7) / 8;
   }
