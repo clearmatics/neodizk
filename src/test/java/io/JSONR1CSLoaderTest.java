@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
 import org.json.simple.parser.ParseException;
@@ -30,13 +29,9 @@ public class JSONR1CSLoaderTest {
 
   @Test
   public void loadSerialTest() {
+    JSONR1CSLoader loader = getSimpleCircuitLoader();
+
     // Load the test data
-    String dizkHome = System.getenv("DIZK");
-    Path pathToFile = Paths.get(dizkHome, "src", "test", "java", "data", "simple_gadget_r1cs.json");
-    if (!Files.exists(pathToFile)) {
-      fail("Test r1cs file not found.");
-    }
-    JSONR1CSLoader loader = new JSONR1CSLoader(pathToFile.toString());
     R1CSRelation<BN254aFr> loadedRelation = loader.loadSerial(BN254aFr.ONE, BN254aFr.FrParameters);
     assertTrue(loadedRelation.isValid());
 
@@ -65,12 +60,7 @@ public class JSONR1CSLoaderTest {
 
   @Test
   public void loadRDDTest() {
-    // Load the test data
-    String dizkHome = System.getenv("DIZK");
-    Path pathToFile = Paths.get(dizkHome, "src", "test", "java", "data", "simple_gadget_r1cs.json");
-    if (!Files.exists(pathToFile)) {
-      fail("Test r1cs file not found.");
-    }
+    JSONR1CSLoader loader = getSimpleCircuitLoader();
 
     // Set up configuration and SPARK context
     final SparkConf conf = new SparkConf().setMaster("local").setAppName("loader");
@@ -84,8 +74,6 @@ public class JSONR1CSLoaderTest {
     config = new Configuration(1, 1, 1, 2, sc, StorageLevel.MEMORY_ONLY());
     config.setRuntimeFlag(false);
     config.setDebugFlag(true);
-
-    JSONR1CSLoader loader = new JSONR1CSLoader(pathToFile.toString());
 
     try {
       R1CSRelationRDD<BN254aFr> loadedRelationRDD =
@@ -106,9 +94,7 @@ public class JSONR1CSLoaderTest {
               new Tuple2<>((long) 2, new BN254aFr("1")), // Auxiliary
               new Tuple2<>((long) 3, new BN254aFr("1")),
               new Tuple2<>((long) 4, new BN254aFr("1")));
-      JavaRDD<Tuple2<Long, BN254aFr>> assignmentRDD = sc.parallelize(fullAssignment);
-      JavaPairRDD<Long, BN254aFr> pairAssignmentRDD =
-          JavaPairRDD.<Long, BN254aFr>fromJavaRDD(assignmentRDD);
+      JavaPairRDD<Long, BN254aFr> pairAssignmentRDD = sc.parallelizePairs(fullAssignment);
 
       boolean result = loadedRelationRDD.isSatisfied(primary, pairAssignmentRDD);
       System.out.println("==========> Result after assignment: " + result);
@@ -128,9 +114,8 @@ public class JSONR1CSLoaderTest {
               new Tuple2<>((long) 2, new BN254aFr("2")), // Invalid Auxiliary
               new Tuple2<>((long) 3, new BN254aFr("1")),
               new Tuple2<>((long) 4, new BN254aFr("1")));
-      JavaRDD<Tuple2<Long, BN254aFr>> invalidAssignmentRDD = sc.parallelize(fullAssignmentInvalid);
       JavaPairRDD<Long, BN254aFr> invalidPairAssignmentRDD =
-          JavaPairRDD.<Long, BN254aFr>fromJavaRDD(invalidAssignmentRDD);
+          sc.parallelizePairs(fullAssignmentInvalid);
 
       boolean invalidResult =
           loadedRelationRDD.isSatisfied(primaryInvalid, invalidPairAssignmentRDD);
@@ -143,5 +128,15 @@ public class JSONR1CSLoaderTest {
     } catch (ParseException e) {
       e.printStackTrace();
     }
+  }
+
+  JSONR1CSLoader getSimpleCircuitLoader() {
+    final Path path =
+        Paths.get(getClass().getClassLoader().getResource("simple_circuit_r1cs.json").getPath());
+    if (!Files.exists(path)) {
+      fail("Test r1cs file not found: " + path.toString());
+    }
+
+    return new JSONR1CSLoader(path.toString());
   }
 }
