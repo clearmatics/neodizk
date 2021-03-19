@@ -1,0 +1,41 @@
+version: "3.7"
+services:
+  cluster-master:
+    image: dizk-cluster-master
+    container_name: cluster-master
+    hostname: cluster-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    networks:
+      cluster-network:
+        ipv4_address: 10.5.0.2
+  cluster-slave-1:
+    image: dizk-cluster-slave
+    container_name: cluster-slave-1
+    hostname: cluster-slave-1
+    depends_on:
+      - cluster-master
+    ports:
+      - "8081:8081"
+    networks:
+      cluster-network:
+        ipv4_address: 10.5.0.3
+  cluster-slave-2:
+    image: dizk-cluster-slave
+    container_name: cluster-slave-2
+    hostname: cluster-slave-2
+    depends_on:
+      - cluster-master
+    ports:
+      - "8082:8081"
+    networks:
+      cluster-network:
+        ipv4_address: 10.5.0.4
+networks:
+  cluster-network:
+    driver: bridge
+    ipam:
+     driver: default
+     config:
+       - subnet: 10.5.0.0/16

@@ -1,0 +1,5 @@
+FROM dizk-cluster-base
+
+EXPOSE 8081
+
+CMD ["/usr/share/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "--webui-port", "8081", "spark://cluster-master:7077"]
