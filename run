@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -x
+
+args=`echo $@`
+mvn exec:java -Dexec.mainClass=prover.Prover -Dexec.args="${args}"
