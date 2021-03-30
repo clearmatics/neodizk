@@ -58,4 +58,22 @@ public class Assignment<FieldT extends AbstractFieldElementExpanded<FieldT>>
   public int size() {
     return elements.size();
   }
+
+  public boolean equals(final Assignment<FieldT> o) {
+    return elements.equals(o.elements);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
+    if (o == null) {
+      return false;
+    }
+    if (!(o instanceof Assignment<?>)) {
+      return false;
+    }
+    return (equals((Assignment<FieldT>) o));
+  }
 }
