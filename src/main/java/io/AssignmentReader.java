@@ -47,7 +47,7 @@ public class AssignmentReader<
     return new Tuple2<Assignment<FieldT>, Assignment<FieldT>>(primary, aux);
   }
 
-  public Tuple2<Assignment<FieldT>, JavaPairRDD<Long, FieldT>> readPrimaryAuxiliaryRDD(
+  public Tuple2<Assignment<FieldT>, JavaPairRDD<Long, FieldT>> readPrimaryFullRDD(
       final int primaryInputSize,
       final FieldT one,
       final JavaSparkContext sc,

@@ -89,8 +89,7 @@ public class AssignmentReaderTest extends TestWithSparkContext {
 
     // Read the distributed version of the assignment.
     final Tuple2<Assignment<FrT>, JavaPairRDD<Long, FrT>> primFull =
-        assignmentReader.readPrimaryAuxiliaryRDD(
-            1, one, getSparkContext(), numPartitions, batchSize);
+        assignmentReader.readPrimaryFullRDD(1, one, getSparkContext(), numPartitions, batchSize);
     final Assignment<FrT> primary = primFull._1;
     final JavaPairRDD<Long, FrT> full = primFull._2;
 
