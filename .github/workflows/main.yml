@@ -26,3 +26,12 @@ jobs:
                   java-version: '11'
             - name: Check code fmt
               run: mvn -q spotless:check
+
+    docker-build:
+        runs-on: ubuntu-20.04
+        steps:
+            - uses: actions/checkout@v2
+            - name: Build docker containers
+              run: |
+                  scripts/local-cluster-setup.sh
+                  scripts/docker-make-base-image.sh
