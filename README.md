@@ -95,14 +95,45 @@ Finally, compile the source code:
 mvn compile
 ```
 
-### Docker
+### Docker-based development environment with local cluster
+
+For development, it can be conveneient to work inside a container, to isolate the development environment from the local system, and to make use of a local cluster on a virtual network.
+
+Generate a simple docker-based cluster (1 master + 2 slaves) on a local network:
+```bash
+scripts/local-cluster-setup.sh
+```
+
+Start the simple docker-based cluster:
+```bash
+scripts/local-cluster-start.sh
+```
+
+The master and slaves are launched. Press CTRL-C in this terminal to terminate. The cluster nodes on the virtual network `cluster-network` are:
+- `10.5.0.2` - cluster-master
+- `10.5.0.3` - cluster-slave-1
+- `10.5.0.4` - cluster-slave-2
+
+Generate an image and container for development (in another terminal). The current directory (this repository roont) mapped to `/home/dizk` in the container. The container is attached to the same virtual network with IP address `10.5.1.2`:
+```bash
+scripts/docker-make-base-image.sh
+scripts/docker-init-container.sh
+```
+
+Start the development container:
+```bash
+scripts/docker-start-container.sh
+```
+
+The container terminates when the shell is exited.
+
+### Manual setup of docker-based development environment
 
 ```bash
 docker build -t neodizk-base .
 docker run -it --name neodizk-container neodizk-base
 ```
 
-**Note**: For development purpose, you may want to develop from inside a docker container (to avoid touching your local system's configuration). To do so, you can run the following command:
 ```bash
 docker run -ti -v "$(pwd)":/home/dizk-dev neodizk-base
 ```
