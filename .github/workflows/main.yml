@@ -35,6 +35,9 @@ jobs:
               run: |
                   scripts/local-cluster-setup.sh
                   scripts/dev-setup.sh
+                  docker-compose -f scripts/local_cluster/docker-compose.yml up -d
                   docker start dizk
-                  docker exec dizk mvn compile
+                  docker exec dizk mvn package -Dmaven.test.skip=true
+                  docker exec dizk ./run-prover --test
                   docker stop dizk
+                  docker-compose -f scripts/local_cluster/docker-compose.yml down
