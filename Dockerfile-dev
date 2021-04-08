@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM dizk-base
 
 # https://github.com/moby/moby/issues/4032#issuecomment-163689851
 # https://github.com/moby/moby/issues/4032#issuecomment-192327844
@@ -7,9 +7,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Configure Java
 RUN apt update && apt upgrade -y
 RUN apt install -y \
-    openjdk-11-jdk \
     curl \
-    tar \
     # Temp dev tools
     vim \
     git

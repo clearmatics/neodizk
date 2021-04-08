@@ -34,4 +34,7 @@ jobs:
             - name: Build docker containers
               run: |
                   scripts/local-cluster-setup.sh
-                  scripts/docker-make-base-image.sh
+                  scripts/dev-setup.sh
+                  docker start dizk
+                  docker exec dizk mvn compile
+                  docker stop dizk

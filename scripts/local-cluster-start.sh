@@ -1,5 +1,3 @@
 #!/usr/bin/env bash
 
-pushd scripts/local_cluster
-    docker-compose up
-popd
+docker-compose -f scripts/local_cluster/docker-compose.yml up

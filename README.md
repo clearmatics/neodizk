@@ -104,11 +104,6 @@ Generate a simple docker-based cluster (1 master + 2 slaves) on a local network:
 scripts/local-cluster-setup.sh
 ```
 
-Start the simple docker-based cluster:
-```bash
-scripts/local-cluster-start.sh
-```
-
 The master and slaves are launched. Press CTRL-C in this terminal to terminate. The cluster nodes on the virtual network `cluster-network` are:
 - `10.5.0.2` - cluster-master
 - `10.5.0.3` - cluster-slave-1
@@ -116,28 +111,38 @@ The master and slaves are launched. Press CTRL-C in this terminal to terminate. 
 
 Generate an image and container for development (in another terminal). The current directory (this repository roont) mapped to `/home/dizk` in the container. The container is attached to the same virtual network with IP address `10.5.1.2`:
 ```bash
-scripts/docker-make-base-image.sh
-scripts/docker-init-container.sh
+scripts/dev-setup.sh
+```
+
+Start the simple docker-based cluster:
+```bash
+scripts/local-cluster-start.sh
 ```
 
 Start the development container:
 ```bash
-scripts/docker-start-container.sh
+scripts/dev-start.sh
 ```
-
 The container terminates when the shell is exited.
+
+From within the development container, programs can be executed on the cluster using `/opt/spark/bin/spark-submit`:
+```bash
+/opt/spark/bin/spark-submit \
+    --class <mynaamespace.MyClass> \
+    --jars <other-classes.jar>
+    --master spark://cluster-master:7077 \
+    /home/dizk/target/neodizk-0.1.0.jar <args>
+```
 
 ### Manual setup of docker-based development environment
 
 ```bash
-docker build -t neodizk-base .
-docker run -it --name neodizk-container neodizk-base
+docker build -t neodizk-base -f Dockerfile-base .
+docker build -t neodizk-dev -f Dockerfile-dev .
+docker run -it --name neodizk-container neodizk-dev
 ```
 
-```bash
-docker run -ti -v "$(pwd)":/home/dizk-dev neodizk-base
-```
-and run `cd /home/dizk-dev` in the container to start developing.
+The repository is mounted at `/home/dizk` in the container.
 
 ### Testing
 
