@@ -39,6 +39,18 @@ public abstract class BNG1<
 
   public abstract BNG1T construct(BNFqT X, BNFqT Y, BNFqT Z);
 
+  public BNFqT getX() {
+    return X;
+  }
+
+  public BNFqT getY() {
+    return Y;
+  }
+
+  public BNFqT getZ() {
+    return Z;
+  }
+
   public BNG1T add(final BNG1T other) {
     assert (other != null);
 

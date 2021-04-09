@@ -36,6 +36,18 @@ public abstract class BNG2<
 
   public abstract BNG2T construct(BNFq2T X, BNFq2T Y, BNFq2T Z);
 
+  public BNFq2T getX() {
+    return X;
+  }
+
+  public BNFq2T getY() {
+    return Y;
+  }
+
+  public BNFq2T getZ() {
+    return Z;
+  }
+
   public BNG2T add(final BNG2T other) {
     // Handle special cases having to do with O
     if (isZero()) {
