@@ -5,6 +5,7 @@ import static algebra.curves.barreto_naehrig.bn254a.BN254aFields.BN254aFr;
 import algebra.curves.AbstractG1;
 import algebra.curves.AbstractG2;
 import algebra.curves.barreto_naehrig.bn254a.BN254aBinaryReader;
+import algebra.curves.barreto_naehrig.bn254a.BN254aBinaryWriter;
 import algebra.curves.barreto_naehrig.bn254a.BN254aG1;
 import algebra.curves.barreto_naehrig.bn254a.BN254aG2;
 import algebra.fields.AbstractFieldElementExpanded;
@@ -12,6 +13,7 @@ import configuration.Configuration;
 import io.AssignmentReader;
 // import profiler.utils.SparkUtils;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import org.apache.commons.cli.*;
@@ -22,6 +24,7 @@ import org.apache.spark.storage.StorageLevel;
 import scala.Tuple2;
 import zk_proof_systems.zkSNARK.grothBGM17.DistributedProver;
 import zk_proof_systems.zkSNARK.grothBGM17.ZKSnarkObjectReader;
+import zk_proof_systems.zkSNARK.grothBGM17.ZKSnarkObjectWriter;
 
 public class Prover {
   public static void main(String[] args) throws IOException {
@@ -51,6 +54,7 @@ public class Prover {
       }
 
       final int primaryInputSize = Integer.parseInt(cmdLine.getOptionValue("primary-size", "1"));
+      final String outputFile = cmdLine.getOptionValue("output", "proof.bin");
 
       // Extract command line arguments and call run.
       if (trailing.length != 2) {
@@ -59,7 +63,7 @@ public class Prover {
         System.exit(1);
       }
 
-      runBN254a(primaryInputSize, trailing[0], trailing[1], cmdLine.hasOption("local"));
+      runBN254a(primaryInputSize, trailing[0], trailing[1], outputFile, cmdLine.hasOption("local"));
     } catch (ParseException e) {
       System.err.println("error: " + e.getMessage());
     }
@@ -128,11 +132,13 @@ public class Prover {
       final int primaryInputSize,
       final String provingKeyFile,
       final String assignmentFile,
+      final String outputFile,
       final boolean local)
       throws IOException {
 
     System.out.println(" provingKeyFile: " + provingKeyFile);
     System.out.println(" assignmentFile: " + assignmentFile);
+    System.out.println(" outputFile: " + outputFile);
 
     var provingKeyReader =
         new ZKSnarkObjectReader<BN254aFr, BN254aG1, BN254aG2>(
@@ -140,9 +146,12 @@ public class Prover {
     var assignmentReader =
         new AssignmentReader<BN254aFr, BN254aG1, BN254aG2>(
             new BN254aBinaryReader(new FileInputStream(assignmentFile)));
+    var proofWriter =
+        new ZKSnarkObjectWriter<BN254aFr, BN254aG1, BN254aG2>(
+            new BN254aBinaryWriter(new FileOutputStream(outputFile)));
 
     Prover.<BN254aFr, BN254aG1, BN254aG2>run(
-        primaryInputSize, provingKeyReader, assignmentReader, local, BN254aFr.ONE);
+        primaryInputSize, provingKeyReader, assignmentReader, proofWriter, local, BN254aFr.ONE);
   }
 
   static <
@@ -153,6 +162,7 @@ public class Prover {
           final int primaryInputSize,
           final ZKSnarkObjectReader<FrT, G1T, G2T> provingKeyReader,
           final AssignmentReader<FrT, G1T, G2T> assignmentReader,
+          final ZKSnarkObjectWriter<FrT, G1T, G2T> proofWriter,
           final boolean local,
           final FrT oneFr)
           throws IOException {
@@ -176,7 +186,8 @@ public class Prover {
 
     final var proof =
         DistributedProver.prove(provingKeyRDD, primFullRDD._1, primFullRDD._2, oneFr, config);
-
     sc.stop();
+
+    proofWriter.writeProof(proof);
   }
 }
