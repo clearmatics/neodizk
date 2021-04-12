@@ -31,7 +31,7 @@ public class R1CStoQAPRDD {
    * Instance map for the R1CSRelation-to-QAP reduction followed by evaluation of the resulting QAP
    * instance.
    *
-   * <p>Namely, given a R1CSRelation constraint system r1cs and a field element x, construct a QAP
+   * <p>Namely, given a R1CSRelation constraint system r1cs and a field element t, construct a QAP
    * instance (evaluated at t) for which: - At := (A_0(t),A_1(t),...,A_m(t)) - Bt :=
    * (B_0(t),B_1(t),...,B_m(t)) - Ct := (C_0(t),C_1(t),...,C_m(t)) - Ht := (1,t,t^2,...,t^n) - Zt :=
    * Z(t) ("vanishing polynomial of a certain set S, evaluated at t") where m = number of variables
