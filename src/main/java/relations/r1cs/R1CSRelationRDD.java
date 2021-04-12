@@ -34,22 +34,22 @@ public class R1CSRelationRDD<FieldT extends AbstractFieldElementExpanded<FieldT>
 
   private final R1CSConstraintsRDD<FieldT> constraints;
 
-  private final int numInputs;
+  private final int numPrimary;
   private final long numAuxiliary;
   private final long numConstraints;
 
   public R1CSRelationRDD(
       final R1CSConstraintsRDD<FieldT> _constraints,
-      final int _numInputs,
+      final int _numPrimary,
       final long _numAuxiliary) {
     constraints = _constraints;
-    numInputs = _numInputs;
+    numPrimary = _numPrimary;
     numAuxiliary = _numAuxiliary;
     numConstraints = _constraints.size();
   }
 
   public boolean isValid() {
-    if (this.numInputs() > this.numVariables()) {
+    if (this.numPrimary() > this.numVariables()) {
       return false;
     }
 
@@ -64,6 +64,9 @@ public class R1CSRelationRDD<FieldT extends AbstractFieldElementExpanded<FieldT>
   public boolean isSatisfied(
       final Assignment<FieldT> primary, final JavaPairRDD<Long, FieldT> oneFullAssignment) {
     assert (oneFullAssignment.count() == this.numVariables());
+
+    // Assert primary input size
+    assert (primary.size() == numPrimary);
 
     // Assert first element == FieldT.one().
     final FieldT firstElement = oneFullAssignment.lookup(0L).get(0);
@@ -175,12 +178,12 @@ public class R1CSRelationRDD<FieldT extends AbstractFieldElementExpanded<FieldT>
     return constraints;
   }
 
-  public int numInputs() {
-    return numInputs;
+  public int numPrimary() {
+    return numPrimary;
   }
 
   public long numVariables() {
-    return numInputs + numAuxiliary;
+    return numPrimary + numAuxiliary;
   }
 
   public long numConstraints() {

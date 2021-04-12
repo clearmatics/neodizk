@@ -77,7 +77,7 @@ public class SerialProver {
     final G2T deltaG2 = provingKey.deltaG2();
     final G1T rsDelta = deltaG1.mul(r.mul(s));
 
-    final int numInputs = provingKey.r1cs().numInputs();
+    final int numPrimary = provingKey.r1cs().numPrimary();
     final int numVariables = provingKey.r1cs().numVariables();
 
     config.beginRuntime("Proof");
@@ -85,26 +85,26 @@ public class SerialProver {
     config.beginLog("Computing evaluation to query A: summation of variable_i*A_i(t)");
     // A = alpha + \sum_{i=0}^{numVariables} var_i * A_i(t) + r * delta
     // Below, the summation is decomposed as:
-    // \sum_{i=0}^{numInputs} pubInp_i * A_i(t) + \sum_{i=numInputs + 1}^{numVariables} auxInp_i *
+    // \sum_{i=0}^{numPrimary} pubInp_i * A_i(t) + \sum_{i=numPrimary + 1}^{numVariables} auxInp_i *
     // A_i(t)
     G1T evaluationAt =
-        VariableBaseMSM.serialMSM(primary.elements(), provingKey.queryA().subList(0, numInputs));
+        VariableBaseMSM.serialMSM(primary.elements(), provingKey.queryA().subList(0, numPrimary));
     evaluationAt =
         evaluationAt.add(
             VariableBaseMSM.serialMSM(
-                auxiliary.elements(), provingKey.queryA().subList(numInputs, numVariables)));
+                auxiliary.elements(), provingKey.queryA().subList(numPrimary, numVariables)));
     config.endLog("Computing evaluation to query A: summation of variable_i*A_i(t)");
 
     config.beginLog("Computing evaluation to query B: summation of variable_i*B_i(t)");
     // B = beta + \sum_{i=0}^{numVariables} var_i * B_i(t) +  s * delta
     // Below, the summation is decomposed as:
-    // \sum_{i=0}^{numInputs} pubInp_i * B_i(t) + \sum_{i=numInputs + 1}^{numVariables} auxInp_i *
+    // \sum_{i=0}^{numPrimary} pubInp_i * B_i(t) + \sum_{i=numPrimary + 1}^{numVariables} auxInp_i *
     // B_i(t)
     final Tuple2<G1T, G2T> evaluationBtPrimary =
-        VariableBaseMSM.doubleMSM(primary.elements(), provingKey.queryB().subList(0, numInputs));
+        VariableBaseMSM.doubleMSM(primary.elements(), provingKey.queryB().subList(0, numPrimary));
     final Tuple2<G1T, G2T> evaluationBtWitness =
         VariableBaseMSM.doubleMSM(
-            auxiliary.elements(), provingKey.queryB().subList(numInputs, numVariables));
+            auxiliary.elements(), provingKey.queryB().subList(numPrimary, numVariables));
     final G1T evaluationBtG1 = evaluationBtPrimary._1.add(evaluationBtWitness._1);
     final G2T evaluationBtG2 = evaluationBtPrimary._2.add(evaluationBtWitness._2);
     config.endLog("Computing evaluation to query B: summation of variable_i*B_i(t)");
@@ -114,10 +114,10 @@ public class SerialProver {
         VariableBaseMSM.serialMSM(qapWitness.coefficientsH(), provingKey.queryH());
     config.endLog("Computing evaluation to query H");
 
-    // Compute evaluationABC = \sum_{i=numInputs+1}^{numVariables} var_i * ((beta*A_i(t) +
+    // Compute evaluationABC = \sum_{i=numPrimary+1}^{numVariables} var_i * ((beta*A_i(t) +
     // alpha*B_i(t) + C_i(t)) + H(t)*Z(t))/delta.
     config.beginLog("Computing evaluation to deltaABC");
-    final int numWitness = numVariables - numInputs;
+    final int numWitness = numVariables - numPrimary;
     // G1T evaluationABC =
     //    VariableBaseMSM.serialMSM(
     //        auxiliary.subList(0, numWitness), provingKey.deltaABCG1().subList(0, numWitness));
@@ -134,7 +134,7 @@ public class SerialProver {
             betaG1.add(evaluationBtG1).add(deltaG1.mul(s)),
             betaG2.add(evaluationBtG2).add(deltaG2.mul(s)));
 
-    // C = \sum_{i=numInputs+1}^{numVariables}(var_i*((beta*A_i(t) + alpha*B_i(t) + C_i(t)) +
+    // C = \sum_{i=numPrimary+1}^{numVariables}(var_i*((beta*A_i(t) + alpha*B_i(t) + C_i(t)) +
     // H(t)*Z(t))/delta) + A*s + r*b - r*s*delta
     final G1T C = evaluationABC.add(A.mul(s)).add(B._1.mul(r)).sub(rsDelta);
 

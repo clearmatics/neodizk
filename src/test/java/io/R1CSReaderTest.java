@@ -56,7 +56,7 @@ public class R1CSReaderTest extends TestWithSparkContext {
   public static <FrT extends AbstractFieldElementExpanded<FrT>> boolean relationEqualsRelationRDD(
       final R1CSRelation<FrT> relation, final R1CSRelationRDD<FrT> relationRDD) {
 
-    if ((relation.numInputs() != relationRDD.numInputs())
+    if ((relation.numPrimary() != relationRDD.numPrimary())
         || (relation.numVariables() != relationRDD.numVariables())
         || (relation.numConstraints() != relationRDD.numConstraints())) {
       return false;

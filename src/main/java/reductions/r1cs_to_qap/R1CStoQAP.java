@@ -33,11 +33,11 @@ public class R1CStoQAP {
    */
   public static <FieldT extends AbstractFieldElementExpanded<FieldT>>
       QAPRelation<FieldT> R1CStoQAPRelation(final R1CSRelation<FieldT> r1cs, final FieldT t) {
-    final int numInputs = r1cs.numInputs();
+    final int numPrimary = r1cs.numPrimary();
     final int numVariables = r1cs.numVariables();
     final int numConstraints = r1cs.numConstraints();
     // SerialFFT returns a pow 2 domain
-    final SerialFFT<FieldT> domain = new SerialFFT<>(numConstraints + numInputs, t);
+    final SerialFFT<FieldT> domain = new SerialFFT<>(numConstraints + numPrimary, t);
     final FieldT zero = t.zero();
 
     final List<FieldT> At = new ArrayList<>(Collections.nCopies(numVariables, zero));
@@ -48,7 +48,7 @@ public class R1CStoQAP {
     // Construct in Lagrange basis; add and process the constraints,
     // input_i * 0 = 0, to ensure soundness of input consistency.
     final List<FieldT> lagrangeCoefficients = domain.lagrangeCoefficients(t);
-    for (int i = 0; i < r1cs.numInputs(); i++) {
+    for (int i = 0; i < r1cs.numPrimary(); i++) {
       At.set(i, lagrangeCoefficients.get(numConstraints + i));
     }
 
@@ -89,7 +89,7 @@ public class R1CStoQAP {
     // Compute vanishing polynomial at t
     final FieldT Zt = domain.computeZ(t);
 
-    return new QAPRelation<>(At, Bt, Ct, Ht, Zt, t, numInputs, numVariables, domain.domainSize);
+    return new QAPRelation<>(At, Bt, Ct, Ht, Zt, t, numPrimary, numVariables, domain.domainSize);
   }
 
   /**
@@ -123,7 +123,7 @@ public class R1CStoQAP {
     final FieldT multiplicativeGenerator = fieldFactory.multiplicativeGenerator();
     final FieldT zero = fieldFactory.zero();
     final SerialFFT<FieldT> domain =
-        new SerialFFT<>(r1cs.numConstraints() + r1cs.numInputs(), fieldFactory);
+        new SerialFFT<>(r1cs.numConstraints() + r1cs.numPrimary(), fieldFactory);
 
     final List<FieldT> A = new ArrayList<>(Collections.nCopies(domain.domainSize, zero));
     final List<FieldT> B = new ArrayList<>(Collections.nCopies(domain.domainSize, zero));
@@ -131,7 +131,7 @@ public class R1CStoQAP {
 
     // Account for the additional constraints input_i * 0 = 0.
     config.beginLog("Account for the additional constraints input_i * 0 = 0.");
-    for (int i = 0; i < r1cs.numInputs(); i++) {
+    for (int i = 0; i < r1cs.numPrimary(); i++) {
       A.set(i + r1cs.numConstraints(), oneFullAssignment.get(i));
     }
     config.endLog("Account for the additional constraints input_i * 0 = 0.");
@@ -209,6 +209,10 @@ public class R1CStoQAP {
     config.endLog("Compute coefficients of polynomial H.");
 
     return new QAPWitness<>(
-        oneFullAssignment, coefficientsH, r1cs.numInputs(), r1cs.numVariables(), domain.domainSize);
+        oneFullAssignment,
+        coefficientsH,
+        r1cs.numPrimary(),
+        r1cs.numVariables(),
+        domain.domainSize);
   }
 }
