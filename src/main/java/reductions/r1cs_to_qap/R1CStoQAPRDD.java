@@ -13,7 +13,6 @@ import algebra.fields.AbstractFieldElementExpanded;
 import common.MathUtils;
 import common.Utils;
 import configuration.Configuration;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +25,7 @@ import relations.qap.QAPWitnessRDD;
 import relations.r1cs.R1CSRelationRDD;
 import scala.Tuple2;
 
-public class R1CStoQAPRDD implements Serializable {
+public class R1CStoQAPRDD {
 
   /**
    * Instance map for the R1CSRelation-to-QAP reduction followed by evaluation of the resulting QAP
