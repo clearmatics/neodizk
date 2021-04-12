@@ -36,7 +36,7 @@ public class R1CSReader<
     final int num_primary_inputs = Math.toIntExact(reader.readLongLE());
     final int num_auxiliary_inputs = Math.toIntExact(reader.readLongLE());
     final R1CSConstraints<FieldT> constraints = readConstraints();
-    return new R1CSRelation<FieldT>(constraints, num_primary_inputs, num_auxiliary_inputs);
+    return new R1CSRelation<FieldT>(constraints, num_primary_inputs + 1, num_auxiliary_inputs);
   }
 
   public R1CSRelationRDD<FieldT> readR1CSRDD(JavaSparkContext sc, int numPartitions, int batchSize)
@@ -44,7 +44,7 @@ public class R1CSReader<
     final int numPrimaryInputs = Math.toIntExact(reader.readLongLE());
     final long numAuxiliaryInputs = reader.readLongLE();
     var constraints = readConstraintsRDD(sc, numPartitions, batchSize);
-    return new R1CSRelationRDD<FieldT>(constraints, numPrimaryInputs, numAuxiliaryInputs);
+    return new R1CSRelationRDD<FieldT>(constraints, numPrimaryInputs + 1, numAuxiliaryInputs);
   }
 
   protected R1CSConstraints<FieldT> readConstraints() throws IOException {
