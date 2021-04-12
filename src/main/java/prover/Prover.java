@@ -181,6 +181,10 @@ public class Prover {
     final var primFullRDD =
         assignmentReader.readPrimaryFullRDD(primaryInputSize, oneFr, sc, numPartitions, batchSize);
 
+    if (!provingKeyRDD.r1cs().isSatisfied(primFullRDD._1, primFullRDD._2)) {
+      throw new RuntimeException("assignment does not satisfy r1cs");
+    }
+
     final var config =
         new Configuration(numExecutors, numCores, numMemory, numPartitions, sc, storageLevel);
 
