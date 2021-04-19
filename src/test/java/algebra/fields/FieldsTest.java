@@ -31,7 +31,7 @@ public class FieldsTest extends GenericFieldsTest {
     final Fp c = new Fp(2, FpParameters);
 
     testField(ffactory, a, b, c);
-    testFieldExpanded(ffactory);
+    testFieldExpanded(ffactory, FpParameters.s());
   }
 
   @Test

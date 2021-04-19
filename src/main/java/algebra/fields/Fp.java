@@ -8,6 +8,7 @@
 package algebra.fields;
 
 import algebra.fields.abstractfieldparameters.AbstractFpParameters;
+import common.MathUtils;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Random;
@@ -102,9 +103,18 @@ public class Fp extends AbstractFieldElementExpanded<Fp> {
   }
 
   public Fp rootOfUnity(final long order) {
-    final BigInteger exponent = FpParameters.modulus().divide(BigInteger.valueOf(order));
+    final BigInteger root = FpParameters.root();
+    final long s = FpParameters.s();
+    final long logOrder = MathUtils.log2(order);
+    assert (order == 1 << logOrder);
+    assert (logOrder <= s);
 
-    return new Fp(FpParameters.root().modPow(exponent, FpParameters.modulus()), FpParameters);
+    // The integer root satisfies root^{2^s} = 1 mod p. Therefore, for order =
+    // 2^logOrder, the element root_order = root^{2^{s-logOrder}} satisfies
+    // root_order^order = 1.
+
+    final BigInteger exponent = BigInteger.valueOf(1l << (s - logOrder));
+    return new Fp(root.modPow(exponent, FpParameters.modulus()), FpParameters);
   }
 
   public int bitSize() {

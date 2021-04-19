@@ -28,7 +28,7 @@ public class BNFieldsTest extends GenericCurveFieldsTest {
     final Fp c = ffactory.construct(652623743);
 
     testField(ffactory, a, b, c);
-    testFieldExpanded(ffactory);
+    testFieldExpanded(ffactory, FqParameters.s());
   }
 
   @Test
@@ -40,7 +40,7 @@ public class BNFieldsTest extends GenericCurveFieldsTest {
     final Fp c = ffactory.construct(652623743);
 
     testField(ffactory, a, b, c);
-    testFieldExpanded(FrParameters.ONE());
+    testFieldExpanded(ffactory, FrParameters.s());
   }
 
   @Test
@@ -103,7 +103,7 @@ public class BNFieldsTest extends GenericCurveFieldsTest {
     final Fp c = ffactory.construct(652623743);
 
     testField(ffactory, a, b, c);
-    testFieldExpanded(ffactory);
+    testFieldExpanded(ffactory, FqParameters.s());
   }
 
   @Test
@@ -115,7 +115,7 @@ public class BNFieldsTest extends GenericCurveFieldsTest {
     final Fp c = ffactory.construct(652623743);
 
     testField(ffactory, a, b, c);
-    testFieldExpanded(FrParameters.ONE());
+    testFieldExpanded(ffactory, FrParameters.s());
   }
 
   @Test

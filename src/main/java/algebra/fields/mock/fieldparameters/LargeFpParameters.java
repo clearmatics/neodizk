@@ -37,7 +37,24 @@ public class LargeFpParameters extends AbstractFpParameters implements Serializa
 
   public BigInteger root() {
     if (root == null) {
-      root = new BigInteger("6");
+      // dtebbs:
+      //
+      // This was originally:
+      //
+      //   root = new BigInteger("6");
+      //
+      // where root had multiplicative order modulus-1. It has been changed
+      // compatible with the other fields, so that root has order s(), as follows:
+      //
+      //   sage: r = 1532495540865888858358347027150309183618765510462668801
+      //   sage: Fr = GF(r)
+      //   sage: Fr(6).multiplicative_order()
+      //   1532495540865888858358347027150309183618765510462668800
+      //   sage: factor(r-1)
+      //   2^43 * 5^2 * 7 * 59 * 131 * 12539 * 10272712826778845258848304364007
+      //   sage: pow(Fr(6), (r-1)/(2^43))
+      //   689649422299708619323149500019547423837788564927818732
+      root = new BigInteger("689649422299708619323149500019547423837788564927818732");
     }
 
     return root;
@@ -64,7 +81,9 @@ public class LargeFpParameters extends AbstractFpParameters implements Serializa
   }
 
   public long s() {
-    return numBits();
+    // sage: factor(r-1)
+    // 2^43 * 5^2 * 7 * 59 * 131 * 12539 * 10272712826778845258848304364007
+    return 43;
   }
 
   public BigInteger t() {
