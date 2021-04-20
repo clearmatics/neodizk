@@ -78,7 +78,7 @@ More information about compilation options can be found [here](http://maven.apac
 
 This library uses Apache Spark, an open-source cluster-computing framework that natively supports Java, Scala, and Python. Among these, we found Java to fit our goals because we could leverage its rich features for object-oriented programming and we could control execution in a (relatively) fine-grained way.
 
-While other libraries for zero knowledge proof systems are written in low-level languages (e.g., [libsnark](https://github.com/scipr-lab/libsnark) is written in C++ and [bellman](https://github.com/zkcrypto/bellman) in Rust), harnessing the speed of such languages in our setting is not straightforward. For example, we evaluated the possibility of interfacing with C (using native binding approaches like JNI and JNA), and concluded that the cost of memory management and process inferfacing resulted in a slower performance than from purely native Java execution.
+While other libraries for zero knowledge proof systems are written in low-level languages (e.g., [libsnark](https://github.com/scipr-lab/libsnark) is written in C++ and [bellman](https://github.com/zkcrypto/bellman) in Rust), harnessing the speed of such languages in our setting is not straightforward. For example, we evaluated the possibility of interfacing with C (using native binding approaches like JNI and JNA), and concluded that the cost of memory management and process interfacing resulted in a slower performance than from purely native Java execution.
 
 ### Installation
 
@@ -95,18 +95,54 @@ Finally, compile the source code:
 mvn compile
 ```
 
-### Docker
+### Docker-based development environment with local cluster
 
+For development, it can be convenient to work inside a container, to isolate the development environment from the local system, and to make use of a local cluster on a virtual network.
+
+Generate a simple docker-based cluster (1 master + 2 slaves) on a local network:
 ```bash
-docker build -t neodizk-base .
-docker run -it --name neodizk-container neodizk-base
+scripts/local-cluster-setup.sh
 ```
 
-**Note**: For development purpose, you may want to develop from inside a docker container (to avoid touching your local system's configuration). To do so, you can run the following command:
+The master and slaves are launched. Press CTRL-C in this terminal to terminate. The cluster nodes on the virtual network `cluster-network` are:
+- `10.5.0.2` - cluster-master
+- `10.5.0.3` - cluster-slave-1
+- `10.5.0.4` - cluster-slave-2
+
+Generate an image and container for development (in another terminal). The current directory (this repository root) mapped to `/home/dizk` in the container. The container is attached to the same virtual network with IP address `10.5.1.2`:
 ```bash
-docker run -ti -v "$(pwd)":/home/dizk-dev neodizk-base
+scripts/dev-setup.sh
 ```
-and run `cd /home/dizk-dev` in the container to start developing.
+
+Start the simple docker-based cluster:
+```bash
+scripts/local-cluster-start.sh
+```
+
+Start the development container:
+```bash
+scripts/dev-start.sh
+```
+The container terminates when the shell is exited.
+
+From within the development container, programs can be executed on the cluster using `/opt/spark/bin/spark-submit`:
+```bash
+/opt/spark/bin/spark-submit \
+    --class <mynaamespace.MyClass> \
+    --jars <other-classes.jar>
+    --master spark://cluster-master:7077 \
+    /home/dizk/target/neodizk-0.1.0.jar <args>
+```
+
+### Manual setup of docker-based development environment
+
+```bash
+docker build -t neodizk-base -f Dockerfile-base .
+docker build -t neodizk-dev -f Dockerfile-dev .
+docker run -it --name neodizk-container neodizk-dev
+```
+
+The repository is mounted at `/home/dizk` in the container.
 
 ### Testing
 
@@ -180,7 +216,7 @@ Below is an example to demonstrate how to launch a test cluster `test-cluster`.
 Before doing so, we assume that:
 - the private key (`.pem`) file of the created EC2 keypair (see [this step](#create-and-configure-an-aws-account)) is stored on your computer at: `~/.ssh/ec2-key.pem`
 - the desired instance type is: `m4.large`
-- the choosen AMI is one of the AMIs of either Amazon Linux 2 or the Amazon Linux AMI (see [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/finding-an-ami.html) to find an AMI). In fact, as documented [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/connection-prereqs.html) - the default username one can use to connect to the EC2 instance depends on the choosen AMI. For Amazon Linux (2) AMIs, this default username is `ec2-user`. For the sake of this example, we assume that the choosen AMI is: `ami-00b882ac5193044e4`
+- the chosen AMI is one of the AMIs of either Amazon Linux 2 or the Amazon Linux AMI (see [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/finding-an-ami.html) to find an AMI). In fact, as documented [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/connection-prereqs.html) - the default username one can use to connect to the EC2 instance depends on the chosen AMI. For Amazon Linux (2) AMIs, this default username is `ec2-user`. For the sake of this example, we assume that the chosen AMI is: `ami-00b882ac5193044e4`
 - the region is `us-east-1`
 
 Furthermore, before instantiating a cluster with Flintrock, it is necessary to configure the environment with the credentials ("access key ID" and "secret access key") of the IAM programmatic user created in [previous steps](#create-and-configure-an-aws-account). This can either be done by configuring environment variables, or using a configuration file (as documented [here](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#configuring-credentials).)

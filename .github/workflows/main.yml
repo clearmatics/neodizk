@@ -14,7 +14,7 @@ jobs:
               with:
                   java-version: '11'
             - name: Run tests with Maven
-              run: mvn clean test
+              run: SPARK_LOCAL_IP=127.0.0.1 mvn clean test
 
     check-fmt:
         runs-on: ubuntu-20.04
@@ -26,3 +26,15 @@ jobs:
                   java-version: '11'
             - name: Check code fmt
               run: mvn -q spotless:check
+
+    docker-build:
+        runs-on: ubuntu-20.04
+        steps:
+            - uses: actions/checkout@v2
+            - name: Build docker containers
+              run: |
+                  scripts/local-cluster-setup.sh
+                  scripts/dev-setup.sh
+                  docker start dizk
+                  docker exec dizk mvn compile
+                  docker stop dizk

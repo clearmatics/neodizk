@@ -1,0 +1,5 @@
+FROM dizk-base
+
+EXPOSE 7077 8080
+
+CMD ["sh", "-c", "${SPARK_HOME}/bin/spark-class org.apache.spark.deploy.master.Master"]
