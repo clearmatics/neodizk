@@ -9,22 +9,23 @@ package algebra.curves.mock.fake_parameters;
 
 import algebra.curves.mock.FakeG1;
 import algebra.curves.mock.abstract_fake_parameters.AbstractFakeG1Parameters;
+import algebra.fields.mock.fieldparameters.LargeFpParameters;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
 public class FakeG1Parameters extends AbstractFakeG1Parameters implements Serializable {
 
-  private FakeFqParameters FqParameters;
+  private LargeFpParameters FqParameters;
 
   private FakeG1 ZERO;
   private FakeG1 ONE;
 
   private ArrayList<Integer> fixedBaseWindowTable;
 
-  public FakeFqParameters FqParameters() {
+  public LargeFpParameters FqParameters() {
     if (FqParameters == null) {
-      FqParameters = new FakeFqParameters();
+      FqParameters = new LargeFpParameters();
     }
 
     return FqParameters;

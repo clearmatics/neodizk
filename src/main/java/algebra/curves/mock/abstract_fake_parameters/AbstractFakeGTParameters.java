@@ -8,11 +8,11 @@
 package algebra.curves.mock.abstract_fake_parameters;
 
 import algebra.curves.mock.FakeGT;
-import algebra.curves.mock.fake_parameters.FakeFqParameters;
+import algebra.fields.mock.fieldparameters.LargeFpParameters;
 
 public abstract class AbstractFakeGTParameters {
 
-  public abstract FakeFqParameters FqParameters();
+  public abstract LargeFpParameters FqParameters();
 
   public abstract FakeGT ONE();
 }

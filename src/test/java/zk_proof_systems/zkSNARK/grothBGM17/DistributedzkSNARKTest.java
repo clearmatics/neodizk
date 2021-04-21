@@ -145,7 +145,7 @@ public class DistributedzkSNARKTest implements Serializable {
     //    final int numConstraints = 1024;
   //
     //    FakeInitialize.init();
-    //    final Fp fieldFactory = new FakeFqParameters().ONE();
+    //    final Fp fieldFactory = new LargeFpParameters().ONE();
     //    final FakeG1 fakeG1Factory = new FakeG1Parameters().ONE();
     //    final FakeG2 fakeG2Factory = new FakeG2Parameters().ONE();
     //    final FakePairing fakePairing = new FakePairing();

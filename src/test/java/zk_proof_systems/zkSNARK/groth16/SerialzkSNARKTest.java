@@ -26,10 +26,10 @@ import algebra.curves.barreto_naehrig.bn254b.BN254bPairing;
 import algebra.curves.barreto_naehrig.bn254b.bn254b_parameters.BN254bG1Parameters;
 import algebra.curves.barreto_naehrig.bn254b.bn254b_parameters.BN254bG2Parameters;
 import algebra.curves.mock.*;
-import algebra.curves.mock.fake_parameters.FakeFqParameters;
 import algebra.curves.mock.fake_parameters.FakeG1Parameters;
 import algebra.curves.mock.fake_parameters.FakeG2Parameters;
 import algebra.fields.Fp;
+import algebra.fields.mock.fieldparameters.LargeFpParameters;
 import configuration.Configuration;
 import java.io.Serializable;
 import org.junit.jupiter.api.BeforeEach;
@@ -111,7 +111,7 @@ public class SerialzkSNARKTest implements Serializable {
     final int numConstraints = 1024;
 
     FakeInitialize.init();
-    final Fp fieldFactory = new FakeFqParameters().ONE();
+    final Fp fieldFactory = new LargeFpParameters().ONE();
     final FakeG1 fakeG1Factory = new FakeG1Parameters().ONE();
     final FakeG2 fakeG2Factory = new FakeG2Parameters().ONE();
     final FakePairing fakePairing = new FakePairing();
