@@ -83,6 +83,10 @@ public class FakeG1 extends AbstractG1<FakeG1> {
     return this.element.bitSize();
   }
 
+  public FakeG1 toAffineCoordinates() {
+    return this;
+  }
+
   public ArrayList<Integer> fixedBaseWindowTable() {
     return FakeG1Parameters.fixedBaseWindowTable();
   }
