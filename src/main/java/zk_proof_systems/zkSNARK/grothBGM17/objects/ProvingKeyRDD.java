@@ -27,7 +27,12 @@ public class ProvingKeyRDD<
   // [delta]
   private final G1T deltaG1;
   private final G2T deltaG2;
-  // {[(beta * A_i(t) + alpha * B_i(t) + C_i(t))/delta]_1}_{i=numInputs+1}^{numVariables}
+
+  // deltaABCG1 = {(i, [(beta * A_i(t) + alpha * B_i(t) +
+  // C_i(t))/delta)]_1}_{i=numInputs+1}^{numVariables}
+  //
+  // Note that the index i in the pair starts from numInputs+1 (or
+  // r1cs().numPrimary(), which already accounts for the 0-th constant variable)
   private final JavaPairRDD<Long, G1T> deltaABCG1;
   // {[A_i(t)]_1}_{i=0}^{numVariables}
   private final JavaPairRDD<Long, G1T> queryA;
