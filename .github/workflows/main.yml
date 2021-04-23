@@ -35,9 +35,9 @@ jobs:
               run: |
                   scripts/local-cluster-setup.sh
                   scripts/dev-setup.sh
-            - name: Start local cluster
+            - name: Start local cluster (detached)
               run: |
-                  docker-compose -f scripts/local_cluster/docker-compose.yml up -d
+                  ./scripts/local-cluster-start.sh -d
             - name: Build prover in dev container
               run: |
                   docker start dizk
@@ -51,4 +51,4 @@ jobs:
             - name: Stop dev container and local cluster
               run: |
                   docker stop dizk
-                  docker-compose -f scripts/local_cluster/docker-compose.yml down
+                  ./scripts/local-cluster-stop.sh
