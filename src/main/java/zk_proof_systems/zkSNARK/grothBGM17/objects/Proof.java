@@ -27,4 +27,22 @@ public class Proof<G1T extends AbstractG1<G1T>, G2T extends AbstractG2<G2T>> {
   public G1T gC() {
     return gC;
   }
+
+  public boolean equals(final Proof<G1T, G2T> o) {
+    return gA.equals(o.gA) && gB.equals(o.gB) && gC.equals(o.gC);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
+    if (o == null) {
+      return false;
+    }
+    if (!(o instanceof Proof<?, ?>)) {
+      return false;
+    }
+    return (equals((Proof<G1T, G2T>) o));
+  }
 }

@@ -32,20 +32,20 @@ public class R1CSRelation<FieldT extends AbstractFieldElementExpanded<FieldT>>
 
   private final R1CSConstraints<FieldT> constraints;
 
-  private final int numInputs;
+  private final int numPrimary;
   private final int numAuxiliary;
   private final int numConstraints;
 
   public R1CSRelation(
-      final R1CSConstraints<FieldT> _constraints, final int _numInputs, final int _numAuxiliary) {
+      final R1CSConstraints<FieldT> _constraints, final int _numPrimary, final int _numAuxiliary) {
     constraints = _constraints;
-    numInputs = _numInputs;
+    numPrimary = _numPrimary;
     numAuxiliary = _numAuxiliary;
     numConstraints = _constraints.size();
   }
 
   public boolean isValid() {
-    if (this.numInputs() > this.numVariables()) {
+    if (this.numPrimary() > this.numVariables()) {
       return false;
     }
 
@@ -63,7 +63,7 @@ public class R1CSRelation<FieldT extends AbstractFieldElementExpanded<FieldT>>
   }
 
   public boolean isSatisfied(final Assignment<FieldT> primary, final Assignment<FieldT> auxiliary) {
-    assert (primary.size() == this.numInputs());
+    assert (primary.size() == this.numPrimary());
     assert (primary.size() + auxiliary.size() == this.numVariables());
 
     // Assert first element == FieldT.one().
@@ -93,12 +93,12 @@ public class R1CSRelation<FieldT extends AbstractFieldElementExpanded<FieldT>>
     return constraints.get(i);
   }
 
-  public int numInputs() {
-    return numInputs;
+  public int numPrimary() {
+    return numPrimary;
   }
 
   public int numVariables() {
-    return numInputs + numAuxiliary;
+    return numPrimary + numAuxiliary;
   }
 
   public int numConstraints() {
@@ -106,7 +106,7 @@ public class R1CSRelation<FieldT extends AbstractFieldElementExpanded<FieldT>>
   }
 
   public boolean equals(final R1CSRelation<?> o) {
-    return (numInputs == o.numInputs)
+    return (numPrimary == o.numPrimary)
         && (numAuxiliary == o.numAuxiliary)
         && (numConstraints == o.numConstraints)
         && constraints.equals(o.constraints);

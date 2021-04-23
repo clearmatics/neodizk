@@ -13,7 +13,6 @@ import algebra.fields.AbstractFieldElementExpanded;
 import common.MathUtils;
 import common.Utils;
 import configuration.Configuration;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,13 +25,13 @@ import relations.qap.QAPWitnessRDD;
 import relations.r1cs.R1CSRelationRDD;
 import scala.Tuple2;
 
-public class R1CStoQAPRDD implements Serializable {
+public class R1CStoQAPRDD {
 
   /**
    * Instance map for the R1CSRelation-to-QAP reduction followed by evaluation of the resulting QAP
    * instance.
    *
-   * <p>Namely, given a R1CSRelation constraint system r1cs and a field element x, construct a QAP
+   * <p>Namely, given a R1CSRelation constraint system r1cs and a field element t, construct a QAP
    * instance (evaluated at t) for which: - At := (A_0(t),A_1(t),...,A_m(t)) - Bt :=
    * (B_0(t),B_1(t),...,B_m(t)) - Ct := (C_0(t),C_1(t),...,C_m(t)) - Ht := (1,t,t^2,...,t^n) - Zt :=
    * Z(t) ("vanishing polynomial of a certain set S, evaluated at t") where m = number of variables
@@ -41,10 +40,10 @@ public class R1CStoQAPRDD implements Serializable {
   public static <FieldT extends AbstractFieldElementExpanded<FieldT>>
       QAPRelationRDD<FieldT> R1CStoQAPRelation(
           final R1CSRelationRDD<FieldT> r1cs, final FieldT t, final Configuration config) {
-    final int numInputs = r1cs.numInputs();
+    final int numPrimary = r1cs.numPrimary();
     final long numVariables = r1cs.numVariables();
     final long numConstraints = r1cs.numConstraints();
-    final long domainSize = MathUtils.lowestPowerOfTwo(numConstraints + numInputs);
+    final long domainSize = MathUtils.lowestPowerOfTwo(numConstraints + numPrimary);
     final int numPartitions = config.numPartitions();
 
     /* Construct in the Lagrange basis. */
@@ -53,9 +52,9 @@ public class R1CStoQAPRDD implements Serializable {
         DistributedFFT.lagrangeCoeffs(t, domainSize, config).persist(config.storageLevel());
 
     // Add and process the constraints, input_i * 0 = 0, to ensure soundness of input consistency.
-    // lagrangeIndices = [ numConstraints, numConstraints + 1, ..., numConstraints + numInputs - 1]
-    final List<Long> lagrangeIndices = new ArrayList<>(numInputs);
-    for (long i = numConstraints; i < numConstraints + numInputs; i++) {
+    // lagrangeIndices = [ numConstraints, numConstraints + 1, ..., numConstraints + numPrimary - 1]
+    final List<Long> lagrangeIndices = new ArrayList<>(numPrimary);
+    for (long i = numConstraints; i < numConstraints + numPrimary; i++) {
       lagrangeIndices.add(i);
     }
 
@@ -72,7 +71,7 @@ public class R1CStoQAPRDD implements Serializable {
     //   (1, L_{numConstraints+1}(t)),
     //   ...
     // }
-    final List<Tuple2<Long, FieldT>> lagrangeCoefficients = new ArrayList<>(numInputs);
+    final List<Tuple2<Long, FieldT>> lagrangeCoefficients = new ArrayList<>(numPrimary);
     for (final Long index : lagrangeIndices) {
       lagrangeCoefficients.add(new Tuple2<>(index - numConstraints, coefficientsMap.get(index)));
     }
@@ -174,7 +173,7 @@ public class R1CStoQAPRDD implements Serializable {
     // Compute vanishing polynomial at t.
     final FieldT Zt = DistributedFFT.computeZ(t, domainSize);
 
-    return new QAPRelationRDD<>(At, Bt, Ct, Ht, Zt, t, numInputs, numVariables, domainSize);
+    return new QAPRelationRDD<>(At, Bt, Ct, Ht, Zt, t, numPrimary, numVariables, domainSize);
   }
 
   /**
@@ -208,12 +207,13 @@ public class R1CStoQAPRDD implements Serializable {
     final FieldT multiplicativeGenerator = fieldFactory.multiplicativeGenerator();
     final FieldT zero = fieldFactory.zero();
     // We do a Radix2-FFT to retrieve the QAP (polynomial form) from the R1CS (matrix form)
-    // via interpolation on a given domain of size a "big enough" power of 2
-    final long domainSize = MathUtils.lowestPowerOfTwo(r1cs.numConstraints() + r1cs.numInputs());
+    // via interpolation on a given domain of size a "big enough" power of 2. Add space for
+    // consistency checks for all primary inputs, including the 1 constant.
+    final long domainSize = MathUtils.lowestPowerOfTwo(r1cs.numConstraints() + r1cs.numPrimary());
 
     config.beginLog("Account for the additional constraints input_i * 0 = 0.");
     final List<Tuple2<Long, FieldT>> shiftedPrimary = new ArrayList<>();
-    for (int i = 0; i < r1cs.numInputs(); i++) {
+    for (int i = 0; i < r1cs.numPrimary(); i++) {
       shiftedPrimary.add(new Tuple2<>(r1cs.numConstraints() + i, primary.get(i)));
     }
     final JavaPairRDD<Long, FieldT> additionalA =
@@ -342,6 +342,6 @@ public class R1CStoQAPRDD implements Serializable {
     config.endLog("Compute coefficients of polynomial H.");
 
     return new QAPWitnessRDD<>(
-        fullAssignment, coefficientsH, r1cs.numInputs(), r1cs.numVariables(), domainSize);
+        fullAssignment, coefficientsH, r1cs.numPrimary(), r1cs.numVariables(), domainSize);
   }
 }

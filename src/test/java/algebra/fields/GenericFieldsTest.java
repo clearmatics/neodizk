@@ -72,10 +72,20 @@ public class GenericFieldsTest {
 
   protected <FieldT extends AbstractFieldElementExpanded<FieldT>> void testFieldExpanded(
       final FieldT a) {
+    // Use 3 as a dummy bound of log2 of root order (since the test itself uses 1 << 3).
+    testFieldExpanded(a, 3);
+  }
+
+  // s is expected to be FpParameters.s() or some other bound on log2 of order
+  // of roots of unity.
+  protected <FieldT extends AbstractFieldElementExpanded<FieldT>> void testFieldExpanded(
+      final FieldT a, final long s) {
     final FieldT one = a.one();
     assertTrue(one.equals(one));
-    // (w_8)^8 = 1
-    assertTrue(a.rootOfUnity(8).pow(8).equals(one));
+
+    final long order = Math.min(1 << s, 8);
+    // (w_order)^order = 1
+    assertTrue(a.rootOfUnity(order).pow(order).equals(one));
   }
 
   protected void testMulBy024(

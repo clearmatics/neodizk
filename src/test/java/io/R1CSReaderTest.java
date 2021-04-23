@@ -56,7 +56,7 @@ public class R1CSReaderTest extends TestWithSparkContext {
   public static <FrT extends AbstractFieldElementExpanded<FrT>> boolean relationEqualsRelationRDD(
       final R1CSRelation<FrT> relation, final R1CSRelationRDD<FrT> relationRDD) {
 
-    if ((relation.numInputs() != relationRDD.numInputs())
+    if ((relation.numPrimary() != relationRDD.numPrimary())
         || (relation.numVariables() != relationRDD.numVariables())
         || (relation.numConstraints() != relationRDD.numConstraints())) {
       return false;
@@ -103,6 +103,9 @@ public class R1CSReaderTest extends TestWithSparkContext {
   public static <FrT extends AbstractFieldElementExpanded<FrT>>
       R1CSRelation<FrT> buildExpectedRelation(final FrT oneFr) {
 
+    // Primary  : (1, x1, x2)
+    // Auxiliary: (w1, w2, w3)
+
     // (2*x1 + 3*w1) * (4*x2 + 5*w2) = 6*w3 + 7*x1,
     LinearCombination<FrT> c1_A = new LinearCombination<FrT>();
     c1_A.add(new LinearTerm<FrT>(1, oneFr.construct(2))); // 2*x1
@@ -129,7 +132,7 @@ public class R1CSReaderTest extends TestWithSparkContext {
     expectConstraints.add(new R1CSConstraint<FrT>(c1_A, c1_B, c1_C));
     expectConstraints.add(new R1CSConstraint<FrT>(c2_A, c2_B, c2_C));
 
-    return new R1CSRelation<FrT>(expectConstraints, 2, 3);
+    return new R1CSRelation<FrT>(expectConstraints, 3, 3);
   }
 
   static <

@@ -9,18 +9,19 @@ package algebra.curves.mock.fake_parameters;
 
 import algebra.curves.mock.FakeGT;
 import algebra.curves.mock.abstract_fake_parameters.AbstractFakeGTParameters;
+import algebra.fields.mock.fieldparameters.LargeFpParameters;
 import java.io.Serializable;
 import java.math.BigInteger;
 
 public class FakeGTParameters extends AbstractFakeGTParameters implements Serializable {
 
-  private FakeFqParameters FqParameters;
+  private LargeFpParameters FqParameters;
 
   private FakeGT ONE;
 
-  public FakeFqParameters FqParameters() {
+  public LargeFpParameters FqParameters() {
     if (FqParameters == null) {
-      FqParameters = new FakeFqParameters();
+      FqParameters = new LargeFpParameters();
     }
 
     return FqParameters;

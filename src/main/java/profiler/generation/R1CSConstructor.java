@@ -27,13 +27,13 @@ public class R1CSConstructor implements Serializable {
   public static <FieldT extends AbstractFieldElementExpanded<FieldT>>
       Tuple3<R1CSRelation<FieldT>, Assignment<FieldT>, Assignment<FieldT>> serialConstruct(
           final int numConstraints,
-          final int numInputs,
+          final int numPrimary,
           final FieldT fieldFactory,
           final Configuration config) {
-    assert (numInputs <= numConstraints + 1);
+    assert (numPrimary <= numConstraints + 1);
 
-    final int numAuxiliary = 3 + numConstraints - numInputs;
-    final int numVariables = numInputs + numAuxiliary;
+    final int numAuxiliary = 3 + numConstraints - numPrimary;
+    final int numVariables = numPrimary + numAuxiliary;
 
     final FieldT one = fieldFactory.one();
     FieldT a = fieldFactory.random(config.seed(), config.secureSeed());
@@ -103,14 +103,14 @@ public class R1CSConstructor implements Serializable {
 
     constraints.add(new R1CSConstraint<>(A, B, C));
 
-    final R1CSRelation<FieldT> r1cs = new R1CSRelation<>(constraints, numInputs, numAuxiliary);
+    final R1CSRelation<FieldT> r1cs = new R1CSRelation<>(constraints, numPrimary, numAuxiliary);
     // Split the fullAssignment in 2 subsets: fullAssignment = primary \cup auxiliary
-    final Assignment<FieldT> primary = new Assignment<>(fullAssignment.subList(0, numInputs));
+    final Assignment<FieldT> primary = new Assignment<>(fullAssignment.subList(0, numPrimary));
     final Assignment<FieldT> auxiliary =
-        new Assignment<>(fullAssignment.subList(numInputs, fullAssignment.size()));
+        new Assignment<>(fullAssignment.subList(numPrimary, fullAssignment.size()));
 
-    assert (r1cs.numInputs() == numInputs);
-    assert (r1cs.numVariables() >= numInputs);
+    assert (r1cs.numPrimary() == numPrimary);
+    assert (r1cs.numVariables() >= numPrimary);
     assert (r1cs.numVariables() == fullAssignment.size());
     assert (r1cs.numConstraints() == numConstraints);
     assert (r1cs.isSatisfied(primary, auxiliary));
@@ -122,13 +122,13 @@ public class R1CSConstructor implements Serializable {
       Tuple3<R1CSRelationRDD<FieldT>, Assignment<FieldT>, JavaPairRDD<Long, FieldT>>
           parallelConstruct(
               final long numConstraints,
-              final int numInputs,
+              final int numPrimary,
               final FieldT fieldFactory,
               final Configuration config) {
-    assert (numInputs <= numConstraints + 1);
+    assert (numPrimary <= numConstraints + 1);
 
-    final long numAuxiliary = 3 + numConstraints - numInputs;
-    final long numVariables = numInputs + numAuxiliary;
+    final long numAuxiliary = 3 + numConstraints - numPrimary;
+    final long numVariables = numPrimary + numAuxiliary;
 
     final FieldT one = fieldFactory.one();
 
@@ -374,7 +374,7 @@ public class R1CSConstructor implements Serializable {
     primary.add(serialA); // Index 1
     primary.add(serialB); // Index 2
     // Start at index 3
-    for (int i = 4; i <= numInputs; i++) {
+    for (int i = 4; i <= numPrimary; i++) {
       if (i % 2 != 0) {
         // a * b = c
         final FieldT tmp = serialA.mul(serialB);
@@ -401,10 +401,10 @@ public class R1CSConstructor implements Serializable {
             linearCombinationA, linearCombinationB, linearCombinationC, numConstraints);
 
     final R1CSRelationRDD<FieldT> r1cs =
-        new R1CSRelationRDD<>(constraints, numInputs, numAuxiliary);
+        new R1CSRelationRDD<>(constraints, numPrimary, numAuxiliary);
 
-    assert (r1cs.numInputs() == numInputs);
-    assert (r1cs.numVariables() >= numInputs);
+    assert (r1cs.numPrimary() == numPrimary);
+    assert (r1cs.numVariables() >= numPrimary);
     assert (r1cs.numVariables() == oneFullAssignmentSize);
     assert (r1cs.numConstraints() == numConstraints);
     assert (r1cs.isSatisfied(primary, fullAssignment));
@@ -582,10 +582,10 @@ public class R1CSConstructor implements Serializable {
     System.out.println("\t Partitions: " + config.numPartitions());
 
     final long numConstraints = n1 * n2 * n3 + n1 * n3 + (n2 - 1);
-    final int numInputs = n1 * n2 + n2 * n3 + n1 * n3; // A, B, and C
+    final int numPrimary = n1 * n2 + n2 * n3 + n1 * n3; // A, B, and C
     // the first one is "one"
     final long numAuxiliary = 1 + n1 * n3 * n2 + n1 * n3 * (n2 - 1); // Z and S
-    final long numVariables = numInputs + numAuxiliary; // UNUSED
+    final long numVariables = numPrimary + numAuxiliary; // UNUSED
 
     final FieldT one = fieldFactory.one();
 
@@ -745,15 +745,15 @@ public class R1CSConstructor implements Serializable {
     final R1CSConstraintsRDD<FieldT> constraints =
         new R1CSConstraintsRDD<>(ALC, BLC, CLC, numConstraints);
     final R1CSRelationRDD<FieldT> r1cs =
-        new R1CSRelationRDD<>(constraints, numInputs, numAuxiliary);
+        new R1CSRelationRDD<>(constraints, numPrimary, numAuxiliary);
 
     final Assignment<FieldT> primary =
         new Assignment<>(
             Utils.convertFromPairs(
-                fullAssignment.filter(e -> e._1 >= 0 && e._1 < numInputs).collect(), numInputs));
+                fullAssignment.filter(e -> e._1 >= 0 && e._1 < numPrimary).collect(), numPrimary));
 
-    assert (r1cs.numInputs() == numInputs);
-    assert (r1cs.numVariables() >= numInputs);
+    assert (r1cs.numPrimary() == numPrimary);
+    assert (r1cs.numVariables() >= numPrimary);
     assert (r1cs.numVariables() == fullAssignment.count());
     assert (r1cs.numConstraints() == numConstraints);
     assert (r1cs.isSatisfied(primary, fullAssignment));
@@ -1613,7 +1613,7 @@ public class R1CSConstructor implements Serializable {
           Indexer constraintOffset) {
 
     final long numConstraints = n1 * n2 * n3 + n1 * n3 * (n2 - 1);
-    final int numInputs = n1 * n2 + n2 * n3 + n1 * n3; // A, B, and C // UNUSED
+    final int numPrimary = n1 * n2 + n2 * n3 + n1 * n3; // A, B, and C // UNUSED
     final long numAuxiliary = n1 * n3 * n2 + n1 * n3 * (n2 - 1); // Z and S
     final long numAssignments = n1 * n3 + numAuxiliary;
 
@@ -1741,8 +1741,8 @@ public class R1CSConstructor implements Serializable {
 
     // final Assignment<FieldT> primary = new Assignment<>(
     //         Utils.convertFromPairs(
-    //                 fullAssignment.filter(e -> e._1 >= 0 && e._1 < numInputs).collect(),
-    //                 numInputs));
+    //                 fullAssignment.filter(e -> e._1 >= 0 && e._1 < numPrimary).collect(),
+    //                 numPrimary));
 
     System.out.println("[R1CSConstructor::matmulParConstruct] numConstraints = " + numConstraints);
 
@@ -1762,10 +1762,10 @@ public class R1CSConstructor implements Serializable {
               final Configuration config) {
 
     final long numConstraints = n1 * n2 * n3 + n1 * n3 * (n2 - 1);
-    final int numInputs = n1 * n2 + n2 * n3 + n1 * n3; // A, B, and C
+    final int numPrimary = n1 * n2 + n2 * n3 + n1 * n3; // A, B, and C
     // the first one is "one"
     final long numAuxiliary = 1 + n1 * n3 * n2 + n1 * n3 * (n2 - 1); // Z and S
-    final long numVariables = numInputs + numAuxiliary;
+    final long numVariables = numPrimary + numAuxiliary;
 
     final FieldT one = fieldFactory.one();
 
@@ -1863,11 +1863,11 @@ public class R1CSConstructor implements Serializable {
     final Assignment<FieldT> primary =
         new Assignment<>(
             Utils.convertFromPairs(
-                fullAssignment.filter(e -> e._1 >= 0 && e._1 < numInputs).collect(), numInputs));
+                fullAssignment.filter(e -> e._1 >= 0 && e._1 < numPrimary).collect(), numPrimary));
     config.endLog("[matmulApp] primary generation");
 
     final R1CSRelationRDD<FieldT> r1cs =
-        new R1CSRelationRDD<>(constraints, numInputs, numAuxiliary);
+        new R1CSRelationRDD<>(constraints, numPrimary, numAuxiliary);
 
     return new Tuple3<>(r1cs, primary, fullAssignment);
   }
@@ -2007,7 +2007,7 @@ public class R1CSConstructor implements Serializable {
 
     final int numPartitions = config.numPartitions();
     System.out.println("[linearRegressionApp] numPartitions: " + numPartitions);
-    final int numInputs = n * d + d * 1 + n * 1;
+    final int numPrimary = n * d + d * 1 + n * 1;
 
     // Construct X, w, y matrices
     final ArrayList<Tuple2<Long, FieldT>> XList = new ArrayList<>();
@@ -2222,14 +2222,14 @@ public class R1CSConstructor implements Serializable {
     final Assignment<FieldT> primary =
         new Assignment<>(
             Utils.convertFromPairs(
-                fullAssignment.filter(e -> e._1 >= 0 && e._1 < numInputs).collect(), numInputs));
+                fullAssignment.filter(e -> e._1 >= 0 && e._1 < numPrimary).collect(), numPrimary));
     config.endLog("[Linear regression app] primary generation");
 
-    long numVariables2 = 1 + numInputs + d * d * (2 * n) + d * (2 * d) + d * (2 * n);
+    long numVariables2 = 1 + numPrimary + d * d * (2 * n) + d * (2 * d) + d * (2 * n);
     // assert(numVariables == numVariables2);
 
     final R1CSRelationRDD<FieldT> r1cs =
-        new R1CSRelationRDD<>(constraints, numInputs, numVariables2 - numInputs);
+        new R1CSRelationRDD<>(constraints, numPrimary, numVariables2 - numPrimary);
 
     return new Tuple3<R1CSRelationRDD<FieldT>, Assignment<FieldT>, JavaPairRDD<Long, FieldT>>(
         r1cs, primary, fullAssignment);
@@ -2246,7 +2246,7 @@ public class R1CSConstructor implements Serializable {
           ArrayList<FieldT> scalars,
           Indexer outputOffset,
           Indexer constraintOffset,
-          int numInputs,
+          int numPrimary,
           int length) {
 
     final FieldT one = fieldFactory.one();
@@ -2254,7 +2254,7 @@ public class R1CSConstructor implements Serializable {
     ArrayList<Tuple2<Long, LinearTerm<FieldT>>> output =
         new ArrayList<Tuple2<Long, LinearTerm<FieldT>>>();
 
-    for (int i = 0; i < numInputs; i++) {
+    for (int i = 0; i < numPrimary; i++) {
       for (int j = 0; j < length; j++) {
         switch (cType) {
           case constraintA:
@@ -2698,7 +2698,7 @@ public class R1CSConstructor implements Serializable {
     int cLowerCols = t._2()._1();
     int cHigherCols = t._2()._2();
 
-    int numInputs = cHigherRows - cLowerRows;
+    int numPrimary = cHigherRows - cLowerRows;
 
     ArrayList<Indexer> inputOffsets = new ArrayList<Indexer>();
     ArrayList<FieldT> scalars = new ArrayList<FieldT>();
@@ -2709,7 +2709,7 @@ public class R1CSConstructor implements Serializable {
     //     N = N.add(one);
     // }
 
-    for (int i = 0; i < numInputs; i++) {
+    for (int i = 0; i < numPrimary; i++) {
       LinearIndexer li = new LinearIndexer(d * (cLowerRows + i) + cLowerCols);
       ArrayList<Indexer> indexers = new ArrayList<Indexer>();
       indexers.add(xOffset);
@@ -2741,7 +2741,7 @@ public class R1CSConstructor implements Serializable {
             scalars,
             newMeanOffset,
             newConstraintOffset,
-            numInputs,
+            numPrimary,
             cHigherCols - cLowerCols);
     return ret.iterator();
   }
@@ -3135,17 +3135,17 @@ public class R1CSConstructor implements Serializable {
     config.endLog("[gaussianFitApp] constraints generation");
     System.out.println("[numconstraints: " + totalNumConstraints + "]");
 
-    int numInputs = n * d + d + d * d;
+    int numPrimary = n * d + d + d * d;
 
     config.beginLog("[gaussianFitApp] primary generation");
     final Assignment<FieldT> primary =
         new Assignment<FieldT>(
             Utils.<FieldT>convertFromPairs(
-                fullAssignment.filter(e -> e._1 >= 0 && e._1 < numInputs).collect(), numInputs));
+                fullAssignment.filter(e -> e._1 >= 0 && e._1 < numPrimary).collect(), numPrimary));
     config.endLog("[gaussianFitApp] primary generation");
 
     final R1CSRelationRDD<FieldT> r1cs =
-        new R1CSRelationRDD<FieldT>(constraints, numInputs, numVariables - numInputs);
+        new R1CSRelationRDD<FieldT>(constraints, numPrimary, numVariables - numPrimary);
 
     return new Tuple3<R1CSRelationRDD<FieldT>, Assignment<FieldT>, JavaPairRDD<Long, FieldT>>(
         r1cs, primary, fullAssignment);

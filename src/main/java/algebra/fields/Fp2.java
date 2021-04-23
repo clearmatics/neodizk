@@ -11,8 +11,8 @@ import algebra.fields.abstractfieldparameters.AbstractFp2Parameters;
 import java.math.BigInteger;
 
 public class Fp2 extends AbstractFieldElement<Fp2> {
-  protected final Fp c0;
-  protected final Fp c1;
+  public final Fp c0;
+  public final Fp c1;
   private final AbstractFp2Parameters Fp2Parameters;
 
   public Fp2(final Fp c0, final Fp c1, final AbstractFp2Parameters Fp2Parameters) {
