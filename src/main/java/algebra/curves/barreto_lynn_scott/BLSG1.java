@@ -27,6 +27,18 @@ public abstract class BLSG1<
 
   public abstract BLSG1T construct(BLSFqT X, BLSFqT Y, BLSFqT Z);
 
+  public BLSFqT getX() {
+    return X;
+  }
+
+  public BLSFqT getY() {
+    return Y;
+  }
+
+  public BLSFqT getZ() {
+    return Z;
+  }
+
   public BLSG1T add(final BLSG1T other) {
     assert (other != null);
 
