@@ -4,6 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import algebra.curves.AbstractG1;
 import algebra.curves.AbstractG2;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377BinaryReader;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377BinaryWriter;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377Fields.BLS12_377Fr;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377G1;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377G2;
+import algebra.curves.barreto_lynn_scott.bls12_377.bls12_377_parameters.BLS12_377G1Parameters;
+import algebra.curves.barreto_lynn_scott.bls12_377.bls12_377_parameters.BLS12_377G2Parameters;
 import algebra.curves.barreto_naehrig.bn254a.BN254aBinaryReader;
 import algebra.curves.barreto_naehrig.bn254a.BN254aBinaryWriter;
 import algebra.curves.barreto_naehrig.bn254a.BN254aFields.BN254aFr;
@@ -76,6 +83,25 @@ class ZKSnarkObjectWriterTest {
     var buffer = os.toByteArray();
 
     var reader = new BN254aBinaryReader(new ByteArrayInputStream(buffer));
+    checkProofReader(reader, oneFr, oneG1, oneG2);
+  }
+
+  @Test
+  public void testProofWriterBLS12_377() throws IOException {
+    final BLS12_377Fr oneFr = BLS12_377Fr.ONE;
+    final BLS12_377G1 oneG1 = BLS12_377G1Parameters.ONE;
+    final BLS12_377G2 oneG2 = BLS12_377G2Parameters.ONE;
+
+    var os = new ByteArrayOutputStream();
+    var binwriter = new BLS12_377BinaryWriter(os);
+    var writer = new ZKSnarkObjectWriter<BLS12_377Fr, BLS12_377G1, BLS12_377G2>(binwriter);
+
+    writeProof(writer, oneFr, oneG1, oneG2);
+    binwriter.flush();
+    os.flush();
+    var buffer = os.toByteArray();
+
+    var reader = new BLS12_377BinaryReader(new ByteArrayInputStream(buffer));
     checkProofReader(reader, oneFr, oneG1, oneG2);
   }
 }
