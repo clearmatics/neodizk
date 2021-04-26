@@ -4,6 +4,11 @@ import static algebra.curves.barreto_naehrig.bn254a.BN254aFields.BN254aFr;
 
 import algebra.curves.AbstractG1;
 import algebra.curves.AbstractG2;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377BinaryReader;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377BinaryWriter;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377Fields.BLS12_377Fr;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377G1;
+import algebra.curves.barreto_lynn_scott.bls12_377.BLS12_377G2;
 import algebra.curves.barreto_naehrig.bn254a.BN254aBinaryReader;
 import algebra.curves.barreto_naehrig.bn254a.BN254aBinaryWriter;
 import algebra.curves.barreto_naehrig.bn254a.BN254aG1;
@@ -36,6 +41,7 @@ public class Prover {
     options.addOption(new Option("t", "test", false, "Run trivial test to verify setup"));
     options.addOption(new Option("p", "primary-size", true, "Size of primary input (1)"));
     options.addOption(new Option("o", "output", true, "Output file (proof.bin)"));
+    options.addOption(new Option("c", "curve", true, "Curve name: bn254a or bls12-377 (bn254a)"));
 
     try {
       var parser = new BasicParser();
@@ -63,7 +69,20 @@ public class Prover {
         System.exit(1);
       }
 
-      runBN254a(primaryInputSize, trailing[0], trailing[1], outputFile, cmdLine.hasOption("local"));
+      final String curve = cmdLine.getOptionValue("curve", "bn254a");
+      switch (curve) {
+        case "bn254a":
+          runBN254a(
+              primaryInputSize, trailing[0], trailing[1], outputFile, cmdLine.hasOption("local"));
+          break;
+        case "bls12-377":
+          runBLS12_377(
+              primaryInputSize, trailing[0], trailing[1], outputFile, cmdLine.hasOption("local"));
+          break;
+        default:
+          throw new ParseException("invalid curve: " + curve);
+      }
+
     } catch (ParseException e) {
       System.err.println("error: " + e.getMessage());
     }
@@ -152,6 +171,32 @@ public class Prover {
 
     Prover.<BN254aFr, BN254aG1, BN254aG2>run(
         primaryInputSize, provingKeyReader, assignmentReader, proofWriter, local, BN254aFr.ONE);
+  }
+
+  static void runBLS12_377(
+      final int primaryInputSize,
+      final String provingKeyFile,
+      final String assignmentFile,
+      final String outputFile,
+      final boolean local)
+      throws IOException {
+
+    System.out.println(" provingKeyFile: " + provingKeyFile);
+    System.out.println(" assignmentFile: " + assignmentFile);
+    System.out.println(" outputFile: " + outputFile);
+
+    var provingKeyReader =
+        new ZKSnarkObjectReader<BLS12_377Fr, BLS12_377G1, BLS12_377G2>(
+            new BLS12_377BinaryReader(new FileInputStream(provingKeyFile)));
+    var assignmentReader =
+        new AssignmentReader<BLS12_377Fr, BLS12_377G1, BLS12_377G2>(
+            new BLS12_377BinaryReader(new FileInputStream(assignmentFile)));
+    var proofWriter =
+        new ZKSnarkObjectWriter<BLS12_377Fr, BLS12_377G1, BLS12_377G2>(
+            new BLS12_377BinaryWriter(new FileOutputStream(outputFile)));
+
+    Prover.<BLS12_377Fr, BLS12_377G1, BLS12_377G2>run(
+        primaryInputSize, provingKeyReader, assignmentReader, proofWriter, local, BLS12_377Fr.ONE);
   }
 
   static <
