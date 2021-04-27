@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -x
+
+# Standalone execution:
+#   mvn exec:java -Dexec.mainClass=prover.Prover -Dexec.args="${args}"
+
+# Execute via spark-submit
+/opt/spark/bin/spark-submit \
+    --class prover.Prover \
+    --jars ~/.m2/repository/commons-cli/commons-cli/1.2/commons-cli-1.2.jar \
+    --master spark://cluster-master:7077 \
+    /home/dizk/target/neodizk-0.1.0.jar \
+    $@

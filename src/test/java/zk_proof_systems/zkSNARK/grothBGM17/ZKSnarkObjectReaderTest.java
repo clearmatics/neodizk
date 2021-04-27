@@ -103,6 +103,9 @@ public class ZKSnarkObjectReaderTest extends TestWithSparkContext {
             add(oneG1.mul(oneFr.construct(7)));
             add(oneG1.mul(oneFr.construct(-3)));
             add(oneG1.mul(oneFr.construct(8)));
+            add(oneG1.mul(oneFr.construct(-4)));
+            add(oneG1.mul(oneFr.construct(9)));
+            add(oneG1.mul(oneFr.construct(-5)));
           }
         };
 
@@ -116,6 +119,15 @@ public class ZKSnarkObjectReaderTest extends TestWithSparkContext {
             add(
                 new Tuple2<G1T, G2T>(
                     oneG1.mul(oneFr.construct(10)), oneG2.mul(oneFr.construct(10))));
+            add(
+                new Tuple2<G1T, G2T>(
+                    oneG1.mul(oneFr.construct(-11)), oneG2.mul(oneFr.construct(-11))));
+            add(
+                new Tuple2<G1T, G2T>(
+                    oneG1.mul(oneFr.construct(12)), oneG2.mul(oneFr.construct(12))));
+            add(
+                new Tuple2<G1T, G2T>(
+                    oneG1.mul(oneFr.construct(-13)), oneG2.mul(oneFr.construct(-13))));
           }
         };
 
@@ -183,7 +195,7 @@ public class ZKSnarkObjectReaderTest extends TestWithSparkContext {
     // Read proving key and compare to expected.
     final var expectPK = expectProvingKey(oneFr, oneG1, oneG2);
     final var pkRDD =
-        zkSnarkObjectReader.readProvingKeyRDD(1, getSparkContext(), numPartitions, batchSize);
+        zkSnarkObjectReader.readProvingKeyRDD(2, getSparkContext(), numPartitions, batchSize);
     assertTrue(provingKeyEqualsProvingKeyRDD(expectPK, pkRDD));
   }
 

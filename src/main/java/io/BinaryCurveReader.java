@@ -197,7 +197,8 @@ public abstract class BinaryCurveReader<
   }
 
   /**
-   * Read a vector of values into a JavaPairRDD<Long, T>, where indices are generated automatically.
+   * Read a vector of values into a JavaPairRDD<Long, T>, where indices (the keys) are generated as
+   * the implicit indices in the list, with some offset added.
    */
   public <T> JavaPairRDD<Long, T> readVectorAsPairRDD(
       final Supplier<T> reader,
@@ -209,7 +210,7 @@ public abstract class BinaryCurveReader<
     final long numEntries = readLongLE();
     final var aggregator = new PairRDDAggregator<Long, T>(sc, numPartitions, batchSize);
     for (long i = 0; i < numEntries; ++i) {
-      aggregator.add(i, reader.get());
+      aggregator.add(i + offset, reader.get());
     }
     return aggregator.aggregate();
   }

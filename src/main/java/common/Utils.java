@@ -73,8 +73,7 @@ public class Utils {
     final GroupT zero = input.get(0)._2.zero();
     ArrayList<GroupT> result = new ArrayList<>(Collections.nCopies(size, zero));
 
-    for (int i = 0; i < size; i++) {
-      final Tuple2<Long, GroupT> element = input.get(i);
+    for (var element : input) {
       result.set(element._1.intValue(), element._2);
     }
 

@@ -14,4 +14,6 @@ public abstract class AbstractG2<G2T extends AbstractG2<G2T>> extends AbstractGr
   public abstract boolean isSpecial();
 
   public abstract int bitSize();
+
+  public abstract AbstractG2<G2T> toAffineCoordinates();
 }

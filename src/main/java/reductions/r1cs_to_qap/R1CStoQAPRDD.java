@@ -216,6 +216,7 @@ public class R1CStoQAPRDD {
     for (int i = 0; i < r1cs.numPrimary(); i++) {
       shiftedPrimary.add(new Tuple2<>(r1cs.numConstraints() + i, primary.get(i)));
     }
+    // Elements (numConstraints + i, var[i])
     final JavaPairRDD<Long, FieldT> additionalA =
         config.sparkContext().parallelizePairs(shiftedPrimary, config.numPartitions());
     config.endLog("Account for the additional constraints input_i * 0 = 0.");
@@ -227,6 +228,9 @@ public class R1CStoQAPRDD {
     // LinearTerm<FieldT>>`.
     // In other, words, A, B, C are all vectors of linear terms (i.e. matrices that will be
     // intepolated on the chosen domain)
+
+    // For each constraint term, (constraint_idx, (var_idx, coeff)) with var_idx == 0, map to
+    // (constraint_idx, coeff) and combine (sum) per index.
     final JavaPairRDD<Long, FieldT> zeroIndexedA =
         r1cs.constraints()
             .A()
@@ -248,6 +252,14 @@ public class R1CStoQAPRDD {
             .mapValues(LinearTerm::value)
             .reduceByKey(FieldT::add);
 
+    // For each term (constraint_idx, (var_idx, coeff)) with var_idx != 0,
+    //   map to (var_idx, (constraint_idx, coeff)
+    //   join with assignment: (var_idx, var_value) to get (var_idx, ((constraint_idx, coeff),
+    // var_value))
+    //   map to (constrain_idx, coeff * var_value)
+    //   union with additionalA
+    //   union with zeroIndexedA
+    //   combine common keys
     JavaPairRDD<Long, FieldT> A =
         r1cs.constraints()
             .A()

@@ -96,6 +96,9 @@ public class DistributedProver {
     // returns the tuple (v1, v2) - removing the keys - which is just an index used to associate the
     // right scalar to the right group element in light of the `VariableBaseMSM` triggered at the
     // next line.
+
+    // join( [(i, assignment[i]), ...], [(i, queryA[i]), ...]) =
+    //   [(i, (assignment[i], queryA[i])), ...]
     final JavaRDD<Tuple2<FieldT, G1T>> computationA =
         fullAssignment.join(provingKey.queryA(), numPartitions).values();
     // `evaluationAt` = \sum_{i=0}^{m} a_i * u_i(x) (in Groth16)
