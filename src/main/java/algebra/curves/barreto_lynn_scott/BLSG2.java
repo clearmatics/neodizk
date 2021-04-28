@@ -30,6 +30,18 @@ public abstract class BLSG2<
 
   public abstract BLSG2T construct(BLSFq2T X, BLSFq2T Y, BLSFq2T Z);
 
+  public BLSFq2T getX() {
+    return X;
+  }
+
+  public BLSFq2T getY() {
+    return Y;
+  }
+
+  public BLSFq2T getZ() {
+    return Z;
+  }
+
   public BLSG2T add(final BLSG2T other) {
     // Handle special cases having to do with O
     if (this.isZero()) {
