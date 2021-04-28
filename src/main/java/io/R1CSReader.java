@@ -62,10 +62,7 @@ public class R1CSReader<
     // Iterate through all constraints, adding terms to A, B and C as
     // appropriate.
     final long numConstraints = reader.readLongLE();
-    System.out.println("numConstraints: " + String.valueOf(numConstraints));
-
     for (long constraintIdx = 0; constraintIdx < numConstraints; ++constraintIdx) {
-      System.out.println("constraint  " + String.valueOf(constraintIdx));
       var constraint = readConstraint();
       addTermsRDD(As, constraintIdx, constraint.A());
       addTermsRDD(Bs, constraintIdx, constraint.B());
