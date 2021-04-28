@@ -74,8 +74,12 @@ public abstract class BinaryCurveReader<
   }
 
   public int readIntLE() throws IOException {
-    final int vBE = readInt();
-    return (vBE << 24) | ((vBE << 8) & 0x00ff0000) | ((vBE >> 8) & 0x0000ff00) | (vBE >> 24);
+    final long vBE = (long) readInt() & 0xffffffffl;
+    return (int)
+        (((vBE & 0xffl) << 24)
+            | ((vBE << 8) & 0x00ff0000l)
+            | ((vBE >> 8) & 0x0000ff00l)
+            | ((vBE >> 24) & 0xffl));
   }
 
   public long readLongLE() throws IOException {
