@@ -53,7 +53,16 @@ public class PairRDDAggregator<K, V> {
   }
 
   void processBatch() {
-    batches.add(sc.parallelizePairs(currentBatch, numPartitions));
+    System.out.println("processBatch: " + String.valueOf(batches.size()));
+    final var newBatchRDD = sc.parallelizePairs(currentBatch, numPartitions);
+
+    // To avoid running out of memory, 'checkpoint' the RDD.  (The goal is to
+    // force it to be fully evaluated and then stored on disk, removing any need
+    // to recompute it, since receomputing requires that the original array of
+    // batch data must be present in memory somewhere).
+    newBatchRDD.checkpoint();
+
+    batches.add(newBatchRDD);
     currentBatch = null;
   }
 
