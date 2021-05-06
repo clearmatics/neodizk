@@ -217,10 +217,10 @@ public class Prover {
     final int numExecutors = 16;
     final int numCores = 2;
     final int numMemory = 16;
-    final int numPartitions = 64;
+    final int numPartitions = 8;
     final StorageLevel storageLevel = StorageLevel.MEMORY_AND_DISK_SER();
 
-    final int batchSize = 1024;
+    final int batchSize = 32 * 1024;
     final var provingKeyRDD =
         provingKeyReader.readProvingKeyRDD(primaryInputSize, sc, numPartitions, batchSize);
     final var primFullRDD =
