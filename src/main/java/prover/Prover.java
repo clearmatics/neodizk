@@ -127,9 +127,9 @@ public class Prover {
     spark.sparkContext().conf().set("spark.files.overwrite", "true");
 
     // checkpoint directory
-    spark.sparkContext().setCheckpointDir("checkpoint");
+    spark.sparkContext().setCheckpointDir("hdfs://ip-172-31-42-216:9000/checkpoints/");
     // clean checkpoint files if the reference is out of scope
-    spark.sparkContext().conf().set("spark.cleaner.referenceTracking.cleanCheckpoints", "true");
+    // spark.sparkContext().conf().set("spark.cleaner.referenceTracking.cleanCheckpoints", "true");
 
     // TODO: reinstate this when it can be made to work
     //   spark.sparkContext().conf().set(
