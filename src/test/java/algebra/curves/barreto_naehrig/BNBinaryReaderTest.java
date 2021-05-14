@@ -68,6 +68,24 @@ public class BNBinaryReaderTest extends AbstractCurveReaderTest {
           (byte) 0xff,
           (byte) 0xff,
           (byte) 0xff,
+          // Int64 : 2^32 - 1
+          (byte) 0xff,
+          (byte) 0xff,
+          (byte) 0xff,
+          (byte) 0xff,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          // Int64 : 255 << 24
+          0x00,
+          0x00,
+          0x00,
+          (byte) 0xff,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
         };
 
     final BN254aBinaryReader binReader = new BN254aBinaryReader(new ByteArrayInputStream(raw));
@@ -77,5 +95,7 @@ public class BNBinaryReaderTest extends AbstractCurveReaderTest {
     assertEquals(452022, binReader.readIntLE());
     assertEquals(-1l, binReader.readLongLE());
     assertEquals(-1, binReader.readIntLE());
+    assertEquals(0xffffffffl, binReader.readLongLE());
+    assertEquals(0xffl << 24, binReader.readLongLE());
   }
 }

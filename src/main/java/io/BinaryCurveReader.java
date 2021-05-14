@@ -83,8 +83,8 @@ public abstract class BinaryCurveReader<
   }
 
   public long readLongLE() throws IOException {
-    final long iL = (long) readIntLE();
-    final long iH = (long) readIntLE();
+    final long iL = ((long) readIntLE()) & 0xffffffffl;
+    final long iH = ((long) readIntLE()) & 0xffffffffl;
     return (iH << 32) | iL;
   }
 
