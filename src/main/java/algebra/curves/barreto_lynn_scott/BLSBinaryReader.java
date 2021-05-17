@@ -78,14 +78,24 @@ public class BLSBinaryReader<
 
   @Override
   public BLSG1T readG1() throws IOException {
+    final var x = readFq();
+    final var y = readFq();
+    if (x.isZero() && y.isOne()) {
+      return G1One.zero();
+    }
+
     return G1One.construct(readFq(), readFq(), FqOne);
   }
 
   @Override
   public BLSG2T readG2() throws IOException {
-    final BLSFq2T X = readFq2();
-    final BLSFq2T Y = readFq2();
-    return G2One.construct(X, Y, Y.one());
+    final BLSFq2T x = readFq2();
+    final BLSFq2T y = readFq2();
+    if (x.isZero() && y.isOne()) {
+      return G2One.zero();
+    }
+
+    return G2One.construct(x, y, y.one());
   }
 
   protected BLSFqT readFq() throws IOException {
