@@ -84,7 +84,7 @@ public class BLSBinaryReader<
       return G1One.zero();
     }
 
-    return G1One.construct(readFq(), readFq(), FqOne);
+    return G1One.construct(x, y, FqOne);
   }
 
   @Override
