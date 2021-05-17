@@ -76,14 +76,24 @@ public class BNBinaryReader<
 
   @Override
   public BNG1T readG1() throws IOException {
-    return G1One.construct(readFq(), readFq(), FqOne);
+    final var x = readFq();
+    final var y = readFq();
+    if (x.isZero() && y.isOne()) {
+      return G1One.zero();
+    }
+
+    return G1One.construct(x, y, FqOne);
   }
 
   @Override
   public BNG2T readG2() throws IOException {
-    final BNFq2T X = readFq2();
-    final BNFq2T Y = readFq2();
-    return G2One.construct(X, Y, Y.one());
+    final var x = readFq2();
+    final var y = readFq2();
+    if (x.isZero() && y.isOne()) {
+      return G2One.zero();
+    }
+
+    return G2One.construct(x, y, y.one());
   }
 
   protected BNFqT readFq() throws IOException {

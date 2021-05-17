@@ -30,14 +30,17 @@ public class GenericBinaryWriterTest<
     {
       var writer = mkWriter.apply(os);
 
+      writer.writeFr(frOne.zero());
       writer.writeFr(frOne);
       writer.writeFr(frOne.construct(-1));
       writer.writeFr(frOne.construct(2));
       writer.writeFr(frOne.construct(-2));
+      writer.writeG1(g1One.zero());
       writer.writeG1(g1One);
       writer.writeG1(g1One.mul(frOne.construct(-1)));
       writer.writeG1(g1One.mul(frOne.construct(2)));
       writer.writeG1(g1One.mul(frOne.construct(-2)));
+      writer.writeG2(g2One.zero());
       writer.writeG2(g2One);
       writer.writeG2(g2One.mul(frOne.construct(-1)));
       writer.writeG2(g2One.mul(frOne.construct(2)));
@@ -51,14 +54,17 @@ public class GenericBinaryWriterTest<
 
     final var is = new ByteArrayInputStream(buffer);
     final var reader = mkReader.apply(is);
+    assertEquals(frOne.zero(), reader.readFr());
     assertEquals(frOne, reader.readFr());
     assertEquals(frOne.construct(-1), reader.readFr());
     assertEquals(frOne.construct(2), reader.readFr());
     assertEquals(frOne.construct(-2), reader.readFr());
+    assertEquals(g1One.zero(), reader.readG1());
     assertEquals(g1One, reader.readG1());
     assertEquals(g1One.mul(frOne.construct(-1)), reader.readG1());
     assertEquals(g1One.mul(frOne.construct(2)), reader.readG1());
     assertEquals(g1One.mul(frOne.construct(-2)), reader.readG1());
+    assertEquals(g2One.zero(), reader.readG2());
     assertEquals(g2One, reader.readG2());
     assertEquals(g2One.mul(frOne.construct(-1)), reader.readG2());
     assertEquals(g2One.mul(frOne.construct(2)), reader.readG2());
