@@ -7,6 +7,7 @@ set -x
 
 # Execute via spark-submit
 /opt/spark/bin/spark-submit \
+    --conf "spark.driver.memory=4G" \
     --class prover.Prover \
     --jars ~/.m2/repository/commons-cli/commons-cli/1.2/commons-cli-1.2.jar \
     --master spark://cluster-master:7077 \
