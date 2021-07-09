@@ -277,11 +277,13 @@ public class Prover {
           throws IOException {
     var sc = createSparkContext(local);
 
-    // TODO: make these configurable.
-    final int numExecutors = 16;
-    final int numCores = 2;
-    final int numMemory = 16;
-    final int numPartitions = 8;
+    // TODO: Configuration requires these, but they are ignored by the prover.
+    final int dummyNumExecutors = 16;
+    final int dummyNumCores = 2;
+    final int dummyNumMemory = 16;
+
+    // TODO: make this configurable.
+    final int numPartitions = 64;
     final StorageLevel storageLevel = StorageLevel.MEMORY_AND_DISK_SER();
 
     final int batchSize = 32 * 1024;
@@ -304,8 +306,13 @@ public class Prover {
       throw new RuntimeException("assignment does not satisfy r1cs");
     }
 
-    final var config =
-        new Configuration(numExecutors, numCores, numMemory, numPartitions, sc, storageLevel);
+    final var config = new Configuration(
+        dummyNumExecutors,
+        dummyNumCores,
+        dummyNumMemory,
+        numPartitions,
+        sc,
+        storageLevel);
 
     final var proof =
         DistributedProver.prove(provingKeyRDD, primFullRDD._1, primFullRDD._2, oneFr, config);
