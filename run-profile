@@ -10,19 +10,27 @@ ZETH_TOOL=../zeth/build/zeth_tool/zeth-tool
 
 # 1 - jsin/jsout value
 function setup_files() {
+    # Unpack data from the archive, either from
+    # ${STORE_HOST}:${STORE_PATH}, or the local ${ASSIGNMENTS_DIR}
     if ! [ -e assignment_$1_$1.bin ] ; then
-        tar -vxjf ${ASSIGNMENTS_DIR}/zeth_assignment_$1_$1.tar.bz2
+        if [ "${STORE_HOST}" != "" ] ; then
+	        ssh ${STORE_HOST} cat ${STORE_PATH}/zeth_assignment_$1_$1.tar.bz2 |
+                tar -vxjf -
+        else
+            tar -vxjf ${ASSIGNMENTS_DIR}/zeth_assignment_$1_$1.tar.bz2
+        fi
+    fi
+    if ! [ -e assignment_$1_$1.bin ] ; then
+        echo no file assignment_$1_$1.bin
+        exit 1
     fi
 
+    # If necessary, extract vk from the keypair
     if ! [ -e pk_$1_$1.bin ] ; then
         ${ZETH_TOOL} split-keypair --pk-file pk_$1_$1.bin keypair_$1_$1.bin
     fi
     if ! [ -e pk_$1_$1.bin ] ; then
         echo no file pk_$1_$1.bin
-        exit 1
-    fi
-    if ! [ -e assignment_$1_$1.bin ] ; then
-        echo no file assignment_$1_$1.bin
         exit 1
     fi
 }
