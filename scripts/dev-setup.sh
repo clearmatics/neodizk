@@ -33,6 +33,7 @@ docker create \
        --env "TERM=xterm-256color" \
        --network local_cluster_cluster-network \
        --ip 10.5.1.2 \
+       --env SPARK_MASTER_HOST=cluster-master \
        dizk-dev
 
 # Network can be (re)connected after creation:

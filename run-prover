@@ -26,13 +26,31 @@ if ! [ -e ${DIZK_JAR} ] ; then
     exit 1
 fi
 
-HOSTNAME=`hostname`
+# Master URL. Fall back to `hostname`:7077.
+if [ "${SPARK_MASTER_HOST}" == "" ] ; then
+    SPARK_MASTER_HOST=`hostname`
+fi
+if [ "${SPARK_MASTER_PORT}" == "" ] ; then
+    SPARK_MASTER_PORT=7077
+fi
+SPARK_MASTER=spark://${SPARK_MASTER_HOST}:${SPARK_MASTER_PORT}
 
-SPARK_DIR=`ls -d ~/spark*/`
-HADOOP_DIR=`ls -d ~/hadoop*/`
+# Check the SPARK_HOME directory, or default to the location used by flintrock.
+if [ "${SPARK_HOME}" == "" ] ; then
+    SPARK_HOME=`ls -d ~/spark*/`
+    SPARK_HOME=${SPARK_HOME%%/}
+fi
+if ! [ -d "${SPARK_HOME}" ] ; then
+    echo "ERROR: no spark directory ${SPARK_HOME}"
+    exit 1
+fi
+if [ "${HADOOP_HOME}" == "" ] ; then
+    HADOOP_HOME=`ls -d ~/hadoop*`
+fi
+
 CP=""
-for i in ${SPARK_DIR} ${HADOOP_DIR} ; do
-    CP=${CP}:${i}jars/'*:'${i}conf
+for i in ${SPARK_HOME} ${HADOOP_HOME} ; do
+    CP=${CP}:${i}/jars/'*:'${i}/conf
 done
 
 # TODO:
@@ -59,7 +77,7 @@ java \
     -cp ${CP} \
     -Xmx${MASTER_HEAP_SIZE} \
     org.apache.spark.deploy.SparkSubmit \
-    --master spark://${HOSTNAME}:7077 \
+    --master ${SPARK_MASTER} \
     --class prover.Prover \
     --jars ${COMMONS_CLI_JAR} \
     --executor-cores ${EXECUTOR_CORES} \
