@@ -3,10 +3,33 @@
 set -x
 set -e
 
-# Assume that assignments have been generated into ../zeth/build
+# This script requires the ZETH_TOOL env var, and either
+# ASSIGNMENTS_DIR, or STORE_HOST and STORE_PATH. See error messages
+# below for description.
+#
+# For now, data is assumed to be generated with the tools in
+# https://github.com/clearmatics/zeth for some values of JSIN and
+# JSOUT (variables influencing the circuit size - see the zeth repo
+# for details).
+#
+# Archives are named `zeth_assignment_<jsin>_<jsout>.tar.bz2`, and
+# contain at least files:
+#
+#   assignment_<jsin>_<jsout>.bin
+#   pk_<jsin>_<jsout>.bin OR keypair_<jsin>_<jsout>.bin
 
-ASSIGNMENTS_DIR=../zeth/build
-ZETH_TOOL=../zeth/build/zeth_tool/zeth-tool
+if [ "$ZETH_TOOL" == "" ] ; then
+    echo "error: ZETH_TOOL must be set to point to the zeth-tool binary"
+    exit 1
+fi
+
+if [ "$ASSIGNMENTS_DIR" == "" ] ; then
+    if [ "$STORE_HOST" == "" ] || [ "$STORE_PATH" == "" ] ; then
+        echo "error: ASSIGNMENTS_DIR must be set to the location of assignment archives, or"
+        echo "       STORE_HOST and STORE_PATH must point to the location on a remote host."
+        exit 1
+    fi
+fi
 
 # 1 - jsin/jsout value
 function setup_files() {
@@ -65,7 +88,7 @@ function profile_for_jsinout() {
 }
 
 # Run for a single JSIN/OUT value, or run over all values.
-if [ "" != "$1" ] ; then
+if [ "$1" != "" ] ; then
     profile_for_jsinout $1
 else
     profile_for_jsinout 8
