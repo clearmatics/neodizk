@@ -46,7 +46,7 @@ function profile_for_jsinout_iteration() {
     echo "=============================================="
     echo "  PROFILE: $1_$1 ITERATION: $2"
     echo "=============================================="
-    time ./run-prover pk_$1_$1.bin assignment_$1_$1.bin > profile_$1_$1_$2.txt 2>&1
+    time ./run_prover pk_$1_$1.bin assignment_$1_$1.bin > profile_$1_$1_$2.txt 2>&1
 }
 
 # 1 - jsin/jsout value

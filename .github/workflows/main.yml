@@ -33,22 +33,22 @@ jobs:
             - uses: actions/checkout@v2
             - name: Build docker containers
               run: |
-                  scripts/local-cluster-setup.sh
-                  scripts/dev-setup.sh
+                  scripts/local_cluster_setup.sh
+                  scripts/dev_setup.sh
             - name: Start local cluster (detached)
               run: |
-                  ./scripts/local-cluster-start.sh -d
+                  ./scripts/local_cluster_start.sh -d
             - name: Build prover in dev container
               run: |
                   docker start dizk
                   docker exec dizk mvn package -Dmaven.test.skip=true
             - name: Run trivial test on local cluster
               run: |
-                  docker exec dizk ./run-prover --test
+                  docker exec dizk ./run_prover --test
             - name: Run trivial test on local cluster
               run: |
-                  docker exec dizk ./run-prover test_data/simple_proving_key_GROTH16_alt-bn128.bin test_data/simple_assignment_alt-bn128.bin
+                  docker exec dizk ./run_prover test_data/simple_proving_key_GROTH16_alt-bn128.bin test_data/simple_assignment_alt-bn128.bin
             - name: Stop dev container and local cluster
               run: |
                   docker stop dizk
-                  ./scripts/local-cluster-stop.sh
+                  ./scripts/local_cluster_stop.sh

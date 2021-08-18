@@ -101,7 +101,7 @@ For development, it can be convenient to work inside a container, to isolate the
 
 Generate a simple docker-based cluster (1 master + 2 slaves) on a local network:
 ```bash
-scripts/local-cluster-setup.sh
+scripts/local_cluster_setup.sh
 ```
 
 The master and slaves are launched. Press CTRL-C in this terminal to terminate. The cluster nodes on the virtual network `cluster-network` are:
@@ -111,17 +111,17 @@ The master and slaves are launched. Press CTRL-C in this terminal to terminate. 
 
 Generate an image and container for development (in another terminal). The current directory (this repository root) mapped to `/home/dizk` in the container. The container is attached to the same virtual network with IP address `10.5.1.2`:
 ```bash
-scripts/dev-setup.sh
+scripts/dev_setup.sh
 ```
 
 Start the simple docker-based cluster:
 ```bash
-scripts/local-cluster-start.sh
+scripts/local_cluster_start.sh
 ```
 
 Start the development container:
 ```bash
-scripts/dev-start.sh
+scripts/dev_start.sh
 ```
 The container terminates when the shell is exited.
 
