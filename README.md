@@ -101,7 +101,7 @@ For development, it can be convenient to work inside a container, to isolate the
 
 Generate a simple docker-based cluster (1 master + 2 slaves) on a local network:
 ```bash
-scripts/local_cluster_setup.sh
+scripts/local-cluster-setup
 ```
 
 The master and slaves are launched. Press CTRL-C in this terminal to terminate. The cluster nodes on the virtual network `cluster-network` are:
@@ -111,17 +111,17 @@ The master and slaves are launched. Press CTRL-C in this terminal to terminate. 
 
 Generate an image and container for development (in another terminal). The current directory (this repository root) mapped to `/home/dizk` in the container. The container is attached to the same virtual network with IP address `10.5.1.2`:
 ```bash
-scripts/dev_setup.sh
+scripts/dev-setup
 ```
 
 Start the simple docker-based cluster:
 ```bash
-scripts/local_cluster_start.sh
+scripts/local-cluster-start
 ```
 
 Start the development container:
 ```bash
-scripts/dev_start.sh
+scripts/dev-start
 ```
 The container terminates when the shell is exited.
 
@@ -319,8 +319,8 @@ and make sure to build spark from a specific commit, by using: `flintrock launch
 Once the cluster is started:
 1. Configure the master node to run ganglia:
 ```console
-flintrock copy-file <your-cluster> scripts/ganglia_setup_master.sh  /home/ec2-user/ --master-only
-flintrock run-command <your-cluster> --master-only 'sudo chmod +x /home/ec2-user/ganglia_setup_master.sh && sudo /home/ec2-user/ganglia_setup_master.sh <your-cluster>'
+flintrock copy-file <your-cluster> scripts/ganglia-setup-master  /home/ec2-user/ --master-only
+flintrock run-command <your-cluster> --master-only 'sudo chmod +x /home/ec2-user/ganglia-setup-master && sudo /home/ec2-user/ganglia-setup-master <your-cluster>'
 ```
 2. Make sure to configure the webserver appropriately by editing `/etc/httpd/conf/httpd.conf` as desired (e.g. change default port)
 3. Edit `/etc/httpd/conf.d/ganglia.conf` as desired (for e.g. write the auth configuration to access the dashboard)
@@ -332,11 +332,11 @@ flintrock run-command <your-cluster> --master-only 'sudo chmod +x /home/ec2-user
 After configuring the master node, configure the worker nodes to send their metrics information to the master/reporting node (since flintrock only has a flag `--master-only` for the `copy-file` and `run-command` commands - and no flag `--workers-only`, we use ssh/scp commands to achieve the same thing below):
 ```console
 # Copy the configuration script to the each worker node
-scp -i $AWS_KEYPAIR_PATH scripts/ganglia_setup_worker.sh ec2-user@<worker-node-ip>:/home/ec2-user/
+scp -i $AWS_KEYPAIR_PATH scripts/ganglia-setup-worker ec2-user@<worker-node-ip>:/home/ec2-user/
 # Connect to each worker node
 ssh -i $AWS_KEYPAIR_PATH ec2-user@<worker-node-ip>
 # On the node execute the following commands
-sudo ./ganglia_setup_worker.sh <your-cluster> <worker-cluster-ip>
+sudo ./ganglia-setup-worker <your-cluster> <worker-cluster-ip>
 ```
 
 #### Configure Spark to use GangliaSink
