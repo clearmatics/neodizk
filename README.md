@@ -87,7 +87,7 @@ Start by cloning this repository and entering the repository working directory:
 git clone https://github.com/clearmatics/neodizk.git
 cd neodizk
 # Set up your environment
-. ./setup_env
+. ./setup_env.sh
 ```
 
 Finally, compile the source code:
