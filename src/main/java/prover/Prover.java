@@ -54,6 +54,7 @@ public class Prover {
     options.addOption(new Option("c", "curve", true, "Curve name: bn254a or bls12-377 (bn254a)"));
     options.addOption(
         new Option("v", "vk", true, "(Optional) Verification key file to verify resulting proof"));
+    options.addOption(new Option("a", "partitions", true, "Number of partitions to use (64)"));
 
     try {
       var parser = new BasicParser();
@@ -75,6 +76,8 @@ public class Prover {
       final String outputFile = cmdLine.getOptionValue("output", "proof.bin");
       final String vkFile = cmdLine.getOptionValue("vk", null);
 
+      final int numPartitions = Integer.parseInt(cmdLine.getOptionValue("partitions", "64"));
+
       // Extract command line arguments and call run.
       if (trailing.length != 2) {
         System.err.println("error: invalid number of arguments\n");
@@ -91,7 +94,8 @@ public class Prover {
               trailing[1],
               outputFile,
               cmdLine.hasOption("local"),
-              vkFile);
+              vkFile,
+              numPartitions);
           break;
         case "bls12-377":
           runBLS12_377(
@@ -100,7 +104,8 @@ public class Prover {
               trailing[1],
               outputFile,
               cmdLine.hasOption("local"),
-              vkFile);
+              vkFile,
+              numPartitions);
           break;
         default:
           throw new ParseException("invalid curve: " + curve);
@@ -176,7 +181,8 @@ public class Prover {
       final String assignmentFile,
       final String outputFile,
       final boolean local,
-      final String vkFileOrNull)
+      final String vkFileOrNull,
+      final int numPartitions)
       throws IOException {
 
     System.out.println(" provingKeyFile: " + provingKeyFile);
@@ -205,6 +211,7 @@ public class Prover {
         outputFile,
         local,
         vkFileOrNull,
+        numPartitions,
         createZKObjectReader,
         createZKObjectWriter,
         createAssignmentReader,
@@ -218,7 +225,8 @@ public class Prover {
       final String assignmentFile,
       final String outputFile,
       final boolean local,
-      final String vkFileOrNull)
+      final String vkFileOrNull,
+      final int numPartitions)
       throws IOException {
 
     System.out.println(" provingKeyFile: " + provingKeyFile);
@@ -248,6 +256,7 @@ public class Prover {
         outputFile,
         local,
         vkFileOrNull,
+        numPartitions,
         createZKSnarkObjectReader,
         createZKSnarkObjectWriter,
         createAssignmentReader,
@@ -268,6 +277,7 @@ public class Prover {
           final String proofFile,
           final boolean local,
           final String vkFileOrNull,
+          final int numPartitions,
           final Function<InputStream, ZKSnarkObjectReader<FrT, G1T, G2T>> createZKSnarkObjectReader,
           final Function<OutputStream, ZKSnarkObjectWriter<FrT, G1T, G2T>>
               createZKSnarkObjectWriter,
@@ -277,11 +287,11 @@ public class Prover {
           throws IOException {
     var sc = createSparkContext(local);
 
-    // TODO: make these configurable.
-    final int numExecutors = 16;
-    final int numCores = 2;
-    final int numMemory = 16;
-    final int numPartitions = 8;
+    // TODO: Configuration requires these, but they are ignored by the prover.
+    final int dummyNumExecutors = 16;
+    final int dummyNumCores = 2;
+    final int dummyNumMemory = 16;
+
     final StorageLevel storageLevel = StorageLevel.MEMORY_AND_DISK_SER();
 
     final int batchSize = 32 * 1024;
@@ -305,7 +315,8 @@ public class Prover {
     }
 
     final var config =
-        new Configuration(numExecutors, numCores, numMemory, numPartitions, sc, storageLevel);
+        new Configuration(
+            dummyNumExecutors, dummyNumCores, dummyNumMemory, numPartitions, sc, storageLevel);
 
     final var proof =
         DistributedProver.prove(provingKeyRDD, primFullRDD._1, primFullRDD._2, oneFr, config);
