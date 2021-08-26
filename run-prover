@@ -17,7 +17,7 @@ if ! [ -e ${COMMONS_CLI_JAR} ] ; then
 fi
 
 # Find the dizk jar file
-DIZK_JAR=neodizk-0.1.0.jar
+DIZK_JAR=neodizk-0.2.0.jar
 if ! [ -e ${DIZK_JAR} ] ; then
     DIZK_JAR=target/${DIZK_JAR}
 fi
