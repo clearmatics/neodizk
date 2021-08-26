@@ -44,10 +44,10 @@ jobs:
                   docker exec dizk mvn package -Dmaven.test.skip=true
             - name: Run trivial test on local cluster
               run: |
-                  docker exec dizk ./run-prover --test
+                  docker exec dizk ./scripts/run-prover --test
             - name: Run trivial test on local cluster
               run: |
-                  docker exec dizk ./run-prover test_data/simple_proving_key_GROTH16_alt-bn128.bin test_data/simple_assignment_alt-bn128.bin
+                  docker exec dizk ./scripts/run-prover test_data/simple_proving_key_GROTH16_alt-bn128.bin test_data/simple_assignment_alt-bn128.bin
             - name: Stop dev container and local cluster
               run: |
                   docker stop dizk
