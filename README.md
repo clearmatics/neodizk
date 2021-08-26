@@ -131,7 +131,7 @@ From within the development container, programs can be executed on the cluster u
     --class <mynaamespace.MyClass> \
     --jars <other-classes.jar>
     --master spark://cluster-master:7077 \
-    /home/dizk/target/neodizk-0.1.0.jar <args>
+    /home/dizk/target/neodizk-0.2.0.jar <args>
 ```
 
 ### Manual setup of docker-based development environment
@@ -266,7 +266,7 @@ mvn package
 2. As documented [here](https://medium.com/@jon.froiland/apache-spark-and-hadoop-on-an-aws-cluster-with-flintrock-part-4-42cf55787928):
     - Move the `.jar` to the cluster via `flintrock copy-file`, e.g.:
     ```console
-    flintrock copy-file test-cluster $DIZK/target/neodizk-0.1.0.jar /home/ec2-user/
+    flintrock copy-file test-cluster $DIZK/target/neodizk-0.2.0.jar /home/ec2-user/
     ```
     - Login to the cluster via `flintrock login`, e.g.:
     ```console
@@ -276,7 +276,7 @@ mvn package
     ```console
     # Create a location to store the logs of the application and pass it to the spark-submit command
     mkdir /tmp/spark-events
-    spark-submit --class profiler.Profiler --conf spark.eventLog.enabled=true --conf spark.eventLog.dir=/tmp/spark-events /home/ec2-user/neodizk-0.1.0.jar 2 1 8G zksnark-large 15 4
+    spark-submit --class profiler.Profiler --conf spark.eventLog.enabled=true --conf spark.eventLog.dir=/tmp/spark-events /home/ec2-user/neodizk-0.2.0.jar 2 1 8G zksnark-large 15 4
     ```
     **Note:** The above can also be carried out directly from the host (without login to the master node of the cluster) via the `flintrock run-command` command.
 3. (Optional) Access SparkUI from your host machine:
